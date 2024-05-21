@@ -1,0 +1,22 @@
+{
+    "one": {
+        "label": "1 Day",
+        "day": 1,
+        "value": 0.3
+    },
+    "two": {
+        "label": "2 Day",
+        "day": 2,
+        "value": 0.6
+    },
+    "three": {
+        "label": "3 Day",
+        "day": 3,
+        "value": 0.8
+    },
+    "week": {
+        "label": "1 Week",
+        "day": 7,
+        "value": 2
+    }
+}
