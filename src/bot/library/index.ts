@@ -39,11 +39,11 @@ ${emoji}
 👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
       config.baseTxScanUrl
     }/${data.hash}">TX</a>${newHolder}
-✅ <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
+💰 <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
 
-➡️ <a href="${data.chartLink}">Chart</a> 🦄 <a href="${
+📊 <a href="${data.chartLink}">Chart</a> 🦄 <a href="${
       data.buyLink
-    }">Buy</a> 🪙 <a href="${config.ownerChannel}">Telegram</a>`;
+    }">Buy</a> 🔥 <b>By ${config.ownerChannel}</b>`;
 
     if (data.type === "image") {
       await bot.sendPhoto(data.groupId, data.mediaId, {
