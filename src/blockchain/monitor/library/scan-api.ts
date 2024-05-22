@@ -1,6 +1,7 @@
 import axios from "axios";
 import Moralis from "moralis";
 import solanaWeb3 from "@solana/web3.js";
+import splToken from "@solana/spl-token";
 
 export const getTokenPairs = async (address: string) => {
   try {
@@ -65,10 +66,17 @@ export const getSolanaTokenDecimals = async (address: string) => {
 
   const publicKey = new solanaWeb3.PublicKey(address);
   const tokenAccountInfo = await connection.getParsedAccountInfo(publicKey);
+  console.log(
+    "🚀 ~ getSolanaTokenDecimals ~ tokenAccountInfo:",
+    tokenAccountInfo
+  );
+  const info = await connection.getBalance(publicKey);
+  console.log("🚀 ~ getSolanaTokenDecimals ~ info:", info);
   if (!tokenAccountInfo || !tokenAccountInfo.value) {
     console.error("Token metadata not found");
     return null;
   }
   const { data } = tokenAccountInfo.value as any;
+  console.log("🚀 ~ getSolanaTokenDecimals ~ data:", data);
   return Number(data?.parsed?.info.decimals);
 };

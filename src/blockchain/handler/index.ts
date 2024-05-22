@@ -65,7 +65,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
         emoji: token.emoji,
         repeatNumber: repeatNumber,
         usdAmount: usd,
-        tokenName: token.baseTokenName,
+        tokenSymbol: token.baseTokenSymbol,
         tokenAddress: token.baseTokenAddress,
         tokenAmount: Math.floor(Number(outAmount)),
         buyer: creator,

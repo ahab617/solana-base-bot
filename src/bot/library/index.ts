@@ -33,11 +33,11 @@ export const postMessageWithMedia = async (data: GroupMessageInterface) => {
 
     let message = `<b><a href="${config.baseTokenScanUrl}/${
       data.tokenAddress
-    }">${data.tokenName}</a> Buy!</b>
+    }">${data.tokenSymbol}</a> Buy!</b>
 ${emoji}
 
 💲 <b>$${numberWithCommas(data.usdAmount, 3)}</b>
-↪️ <b>${numberWithCommas(data.tokenAmount, 3)} ${data.tokenName}</b>
+↪️ <b>${numberWithCommas(data.tokenAmount, 3)} ${data.tokenSymbol}</b>
 👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
       config.baseTxScanUrl
     }/${data.hash}">TX</a>${newHolder}

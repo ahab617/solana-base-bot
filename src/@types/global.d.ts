@@ -33,7 +33,7 @@ declare interface GroupMessageInterface {
   emoji: string;
   repeatNumber: number;
   usdAmount: number;
-  tokenName: string;
+  tokenSymbol: string;
   tokenAddress: string;
   tokenAmount: number;
   buyer: string;
