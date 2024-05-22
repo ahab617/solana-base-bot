@@ -28,7 +28,7 @@ export const postMessageWithMedia = async (data: GroupMessageInterface) => {
     for (let i = 0; i < data.repeatNumber; i++) {
       emoji += data.emoji;
     }
-    if (emoji.length > 50) emoji = emoji.substring(0, 50);
+    if (emoji.length > 120) emoji = emoji.substring(0, 120);
     const newHolder = data.isNewHolder ? `\n⬆️ <b>New Holder</b>` : "";
 
     let message = `<b><a href="${config.baseTokenScanUrl}/${
