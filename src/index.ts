@@ -19,6 +19,7 @@ const connectDatabase = async (mongoUrl: string) => {
     if (result) {
       console.log("MongoDB connected");
       await Moralis.start({ apiKey: config.APIKey });
+      await startBuyHandler();
     }
   } catch (err) {
     console.log("ConnectDatabase", err);

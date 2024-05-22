@@ -2,7 +2,7 @@ declare interface TokenInterface {
   creator: string;
   groupId: string;
   pairName: string;
-  chainid: string;
+  chainId: string;
   pairAddress: string;
   dexUrl: string;
   baseTokenAddress: string;
@@ -26,28 +26,20 @@ declare interface BlockNumInterface {
 }
 
 declare interface GroupMessageInterface {
-  groupId: string;
-  type: "video" | "image";
+  groupId: number;
+  type: string;
   mediaId: string;
-  tokenName: string;
-  tokenSymbol: string;
   emoji: string;
-  usdPrice: number;
-  amount1: number;
-  symbol1: string;
-  amount2: number;
-  symbol2: string;
-  buyerLink: string;
-  txLink: string;
+  repeatNumber: number;
+  usdAmount: number;
+  tokenName: string;
+  tokenAddress: string;
+  tokenAmount: number;
+  buyer: string;
+  hash: string;
   marketcap: number;
-  balance: number;
-  position: number;
-  links: {
-    name: string;
-    link: string;
-  }[];
-  adCaption?: String;
-  adLink?: String;
+  chartLink: string;
+  buyLink: string;
 }
 
 declare interface SendMessageInterface {

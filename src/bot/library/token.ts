@@ -183,7 +183,7 @@ export const confirmPair = async (msg: any, index: string) => {
     tokenInfo[chatId] = {
       ...tokenInfo[chatId],
       pairName: pairName,
-      chainid: selectedPair?.chainId,
+      chainId: selectedPair?.chainId,
       pairAddress: selectedPair?.pairAddress,
       dexUrl: selectedPair?.url,
       baseTokenAddress: selectedPair?.baseToken.address,
@@ -314,7 +314,7 @@ const confirmAddToken = async (msg: any) => {
       creator: chatId,
       groupId: data.groupId,
       pairName: data.pairName,
-      chainid: data.chainid,
+      chainId: data.chainId,
       pairAddress: data.pairAddress,
       dexUrl: data.dexUrl,
       baseTokenAddress: data.baseTokenAddress,
@@ -634,6 +634,7 @@ export const deleteToken = async (msg: any) => {
             message: "👍 <b>Remove Token Success.</b>",
           });
           await showList(msg);
+          await startBuyHandler();
           delete answerCallbacks[chatId];
         })
         .catch(async (err) => {

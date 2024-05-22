@@ -16,8 +16,6 @@ export default new Commands(
     const fromGroup = params.indexOf("groupId") > -1;
     const setAd = params.indexOf("groupIdForAd") > -1;
     const chatId = msg.chat.id;
-    console.log(msg.chat.id);
-    console.log(msg.from.id);
     if (!fromGroup) {
       await sendMessage({
         id: chatId,
@@ -29,7 +27,6 @@ export default new Commands(
       const groupId = setAd
         ? params.replace("groupIdForAd=", "")
         : params.replace("groupId=", "");
-      console.log(groupId);
       const admins = await bot.getChatAdministrators(groupId);
       const hasPermission = admins.some((admin) => admin.user.id === chatId);
 

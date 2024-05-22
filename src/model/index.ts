@@ -5,7 +5,7 @@ const TokenSchema = new Schema({
   creator: String,
   groupId: String,
   pairName: String,
-  chainid: String,
+  chainId: String,
   pairAddress: String,
   dexUrl: String,
   baseTokenAddress: String,

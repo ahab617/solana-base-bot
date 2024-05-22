@@ -1,3 +1,4 @@
+import config from "../../config.json";
 import { numberWithCommas } from "utils";
 import { bot } from "../index";
 
@@ -25,41 +26,32 @@ export const postMessageWithMedia = async (data: GroupMessageInterface) => {
   try {
     let emoji = data.emoji;
     let links = ``;
-    let adCaption = data?.adCaption;
-    let adLink = data?.adLink;
-    let advertise = "";
+    // let adCaption = data?.adCaption;
+    // let adLink = data?.adLink;
+    // let advertise = "";
 
-    if (adCaption && adLink) {
-      advertise = `<b>Ad: </b><a href="${adLink}">${adCaption}</a>`;
-    }
+    // if (adCaption && adLink) {
+    //   advertise = `<b>Ad: </b><a href="${adLink}">${adCaption}</a>`;
+    // }
 
-    let stepVal = data.usdPrice;
-    const step = 0.1;
-    let stepEVal = Math.floor(stepVal / step);
-    emoji = emoji + data.emoji.repeat(stepEVal);
+    emoji = emoji + data.emoji.repeat(data.repeatNumber);
     if (emoji.length > 50) emoji = emoji.substring(0, 50);
 
-    data.links.forEach((link) => {
-      links = links + `<a href="${link.link}">${link.name}</a>` + " | ";
-    });
-    links = links.substring(0, links.length - 2);
-
-    let message = `<b><a href="${data.links[0].link}">${
-      data.tokenName
-    }</a> Buy!</b>
+    let message = `<b><a href="${config.baseTokenScanUrl}/${
+      data.tokenAddress
+    }">${data.tokenName}</a> Buy!</b>
 ${emoji}
 
-🔀 Got <b>${numberWithCommas(data.amount1, 4)} ${data.symbol1}</b>
-🔀 Spent <b>$${numberWithCommas(data.usdPrice, 3)}</b> (<b>${numberWithCommas(
-      data.amount2,
-      4
-    )} ${data.symbol2}</b>)
-👤 <a href="${data.buyerLink}">Buyer</a> / <a href="${data.txLink}">TX</a>
-🗃 Holding <b>${numberWithCommas(data.balance, 2)}</b>
-💸 Market Cap <b>${numberWithCommas(data.marketcap, 0)}</b>
+💲 <b>$${numberWithCommas(data.usdAmount, 3)}</b>
+↪️ <b>${numberWithCommas(data.tokenAmount, 3)} ${data.tokenName}</b>
+👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
+      config.baseTxScanUrl
+    }/${data.hash}">TX</a>
+✅ <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
 
-${links}
-${advertise}`;
+➡️ <a href="${data.chartLink}">Chart</a> 🦄 <a href="${
+      data.buyLink
+    }">Buy</a> 🪙 <code>By </code><b>@${config.ownerChannel}</b>`;
 
     if (data.type === "image") {
       await bot.sendPhoto(data.groupId, data.mediaId, {

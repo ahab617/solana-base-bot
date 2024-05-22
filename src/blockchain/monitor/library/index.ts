@@ -10,8 +10,9 @@ import setlog from "utils/setlog";
 import { BlockNumController } from "blockchain/controller";
 import { currentTime } from "utils/helper";
 import AdController from "controller/adcontroller";
+import { baseEventHandler } from "blockchain/handler";
 
-let tokens = [] as TokenInterface[];
+let tokens: TokenInterface[] = [];
 
 const updatePairAddresses = async () => {
   try {
@@ -247,25 +248,28 @@ export const handleEvent = async (props: any) => {
   handleEvent();
 };
 
-const buyETHEventHandler = async () => {
+const buyEventHandler = async () => {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     if (token && token.pairName && token.groupId) {
-      handleEvent({
-        id: token.pairName + " " + token.groupId,
-        creator: token.creator,
-        groupId: token.groupId,
-        token: token,
-        times: 15,
-        BlockNumController,
-      });
+      if (token.chainId === "base") {
+        baseEventHandler(token);
+      }
+      // handleEvent({
+      //   id: token.pairName + " " + token.groupId,
+      //   creator: token.creator,
+      //   groupId: token.groupId,
+      //   token: token,
+      //   times: 15,
+      //   BlockNumController,
+      // });
     }
   }
 };
 
 const startBuyHandler = async () => {
   await updatePairAddresses();
-  await buyETHEventHandler();
+  await buyEventHandler();
 };
 
 export { startBuyHandler };

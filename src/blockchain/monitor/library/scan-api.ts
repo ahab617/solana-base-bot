@@ -7,7 +7,6 @@ export const getTokenPairs = async (address: string) => {
     const res = await axios.get(
       `https://api.dexscreener.io/latest/dex/tokens/${address}`
     );
-    console.log(res.data.pairs);
     return res.data.pairs;
   } catch (err) {
     return null;
@@ -20,7 +19,39 @@ export const getBaseTokenDecimals = async (address: string) => {
     addresses: [address],
   });
 
+  console.log(response.raw[0]);
+
   return Number(response.raw[0].decimals);
+};
+
+export const getBaseTokenTotalSupply = async (address: string) => {
+  const response = await Moralis.EvmApi.token.getTokenMetadata({
+    chain: "0x2105",
+    addresses: [address],
+  });
+
+  const raw = response.raw[0] as any;
+  const totalSupply = Number(raw?.total_supply || 0);
+
+  return totalSupply;
+};
+
+export const getBaseTokenPrice = async (
+  address: string,
+  pairAddress: string
+) => {
+  try {
+    const res = await axios.get(
+      `https://api.dexscreener.io/latest/dex/tokens/${address}`
+    );
+    const pairs = res.data.pairs;
+    const pair = pairs.filter((pair: any) => {
+      return pair.pairAddress === pairAddress;
+    });
+    return pair[0].priceUsd;
+  } catch (err) {
+    return null;
+  }
 };
 
 export const getTransactions = async (address: string) => {
