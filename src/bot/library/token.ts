@@ -1,13 +1,11 @@
 import { sendMessage } from "./index";
 import { answerCallbacks, bot } from "../index";
 import { TokenController } from "controller";
-import { getPairAddresses } from "blockchain/monitor/library/world-api";
 import {
-  getBaseTokenDecimals,
-  getTokenMeta,
+  getBaseTokenMetadata,
+  getSolanaTokenDecimals,
   getTokenPairs,
 } from "blockchain/monitor/library/scan-api";
-import { isHttpValid } from "utils/helper";
 import { startBuyHandler } from "blockchain/monitor/library";
 import { BlockNumController } from "blockchain/controller";
 
@@ -171,11 +169,22 @@ export const confirmPair = async (msg: any, index: string) => {
     const pairName = `${selectedPair.baseToken.symbol} - ${selectedPair.quoteToken.symbol}`;
     let baseTokenDecimals;
     let quoteTokenDecimals;
+    let totalSupply;
     if (selectedPair?.chainId === "base") {
-      baseTokenDecimals = await getBaseTokenDecimals(
+      const baseTokenMetadata = await getBaseTokenMetadata(
         selectedPair?.baseToken.address!
       );
-      quoteTokenDecimals = await getBaseTokenDecimals(
+      baseTokenDecimals = baseTokenMetadata.decimals;
+      totalSupply = baseTokenMetadata.totalSupply;
+      const quoteTokenMetadata = await getBaseTokenMetadata(
+        selectedPair?.quoteToken.address!
+      );
+      quoteTokenDecimals = quoteTokenMetadata.decimals;
+    } else if (selectedPair?.chainId === "solana") {
+      baseTokenDecimals = await getSolanaTokenDecimals(
+        selectedPair?.baseToken.address!
+      );
+      quoteTokenDecimals = await getSolanaTokenDecimals(
         selectedPair?.quoteToken.address!
       );
     }
@@ -194,6 +203,7 @@ export const confirmPair = async (msg: any, index: string) => {
       quoteTokenName: selectedPair?.quoteToken.name,
       quoteTokenSymbol: selectedPair?.quoteToken.symbol,
       quoteTokenDecimals: quoteTokenDecimals,
+      totalSupply: totalSupply,
     };
     await bot.deleteMessage(chatId, msg.message_id);
     await sendMessage({ id: chatId, message: `<b>Selected ${pairName}</b>` });
@@ -325,6 +335,7 @@ const confirmAddToken = async (msg: any) => {
       quoteTokenName: data.quoteTokenName,
       quoteTokenSymbol: data.quoteTokenSymbol,
       quoteTokenDecimals: data.quoteTokenDecimals,
+      totalSupply: data.totalSupply,
       mediaType: data.mediaType,
       mediaId: data.mediaId,
       emoji: data.emoji,

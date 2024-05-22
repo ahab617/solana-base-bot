@@ -16,6 +16,7 @@ const TokenSchema = new Schema({
   quoteTokenName: String,
   quoteTokenSymbol: String,
   quoteTokenDecimals: Number,
+  totalSupply: Number,
   mediaType: String,
   mediaId: String,
   emoji: String,

@@ -1,4 +1,3 @@
-import { advertiseInfo, showAdvertiseSetting } from "bot/library/advertise";
 import { sendMessage } from "../library";
 import { editInfo, showList } from "../library/token";
 import { bot } from "bot";
@@ -14,7 +13,6 @@ export default new Commands(
     const text = msg.text;
     const params = text.replace("/start", "").trim();
     const fromGroup = params.indexOf("groupId") > -1;
-    const setAd = params.indexOf("groupIdForAd") > -1;
     const chatId = msg.chat.id;
     if (!fromGroup) {
       await sendMessage({
@@ -24,29 +22,21 @@ export default new Commands(
       });
     }
     if (fromGroup) {
-      const groupId = setAd
-        ? params.replace("groupIdForAd=", "")
-        : params.replace("groupId=", "");
+      const groupId = params.replace("groupId=", "");
       const admins = await bot.getChatAdministrators(groupId);
       const hasPermission = admins.some((admin) => admin.user.id === chatId);
 
-      advertiseInfo[chatId] = {
-        groupId: groupId,
-      };
       editInfo[chatId] = {
         groupId: groupId,
       };
-      if (setAd) {
-        await showAdvertiseSetting(msg);
+
+      if (hasPermission) {
+        await showList(msg);
       } else {
-        if (hasPermission) {
-          await showList(msg);
-        } else {
-          await sendMessage({
-            id: chatId,
-            message: "<b>You don't have permission.</>",
-          });
-        }
+        await sendMessage({
+          id: chatId,
+          message: "<b>You don't have permission.</>",
+        });
       }
     }
   }

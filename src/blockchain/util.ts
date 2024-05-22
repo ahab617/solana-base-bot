@@ -1,13 +1,7 @@
-import bs58 from "bs58";
-import axios from "axios";
 import keccak from "keccak";
 import colors from "colors";
 import cron from "node-cron";
-import { ethers } from "ethers";
 
-import { provider } from "./contracts/providers";
-
-// Every Block Handle
 export const handleEvent = async (props: any) => {
   const {
     token,
@@ -95,14 +89,6 @@ export const handleEvent = async (props: any) => {
   handleEvent();
 };
 
-export const encodeByte32String = (text: string) => {
-  try {
-    return ethers.utils.formatBytes32String(text);
-  } catch (err) {
-    return null;
-  }
-};
-
 function stripHexPrefix(value: string) {
   return value.slice(0, 2) === "0x" || value.slice(0, 2) === "0X"
     ? value.slice(2)
@@ -129,50 +115,4 @@ export const toChecksumAddress = (address: string) => {
   }
 };
 
-export const generateAddress = () => {
-  const wallet = ethers.Wallet.createRandom();
-  return { privatekey: wallet.privateKey, publickey: wallet.address };
-};
-
-export const getAddressFromPrivateKey = (privateKey: string) => {
-  const w = new ethers.Wallet(privateKey);
-  return w.address;
-};
-
-export const getTransaction = async (hash: string) => {
-  return await provider?.getTransaction(hash);
-};
-
-export const checkTransactions = (
-  rpc: string,
-  txIds: string[]
-): Promise<any[]> => {
-  return new Promise(async (resolve) => {
-    let params: any[] = [];
-    txIds?.forEach((element, index) => {
-      params.push({
-        jsonrpc: "2.0",
-        method: "eth_getTransactionByHash",
-        params: [element],
-        id: index + 1,
-      });
-    });
-    const response = await axios.post(rpc, params, {
-      headers: { "Content-Type": "application/json" },
-    });
-    if (response && response?.data) return resolve(response?.data);
-  });
-};
-
 export const ZeroAddress = "0x0000000000000000000000000000000000000000";
-
-export const getIdByHash = (text: string) => {
-  try {
-    const bytes = bs58.decode(text);
-    const hex = Buffer.from(bytes).toString("hex");
-    const tokenId = hex.slice(4);
-    return tokenId;
-  } catch (err) {
-    return null;
-  }
-};

@@ -1,17 +1,13 @@
-import axios from "axios";
 import colors from "colors";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber } from "ethers";
 import { BlockNumController } from "../controller/blocknum";
 import { getPairContract, provider } from "blockchain/contracts/providers";
-import { getTransaction, handleEvent } from "blockchain/util";
+import { handleEvent } from "blockchain/util";
 import { formatUnits } from "ethers/lib/utils";
-import { getTokenPrice } from "blockchain/monitor/library/world-api";
 import {
   getBaseTokenBalance,
   getBaseTokenPrice,
-  getBaseTokenTotalSupply,
 } from "blockchain/monitor/library/scan-api";
-import { parseUnit } from "utils/bigmath";
 import { postMessageWithMedia } from "bot/library";
 
 const swapHandler = async (tx: any, token: TokenInterface) => {
@@ -40,15 +36,17 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
       token.baseTokenAddress,
       token.pairAddress
     );
-    const totalSupply = await getBaseTokenTotalSupply(token.baseTokenAddress);
-    const marketcap = Number(totalSupply) * Number(tokenPrice);
-    const balance = await getBaseTokenBalance(creator, token.baseTokenAddress);
-    const isNewHolder = Number(balance) - Number(outAmount) == 0;
+    const marketcap = Number(token.totalSupply) * Number(tokenPrice);
 
     const usd =
       Number(tokenPrice) *
       (type == "Sell" ? Number(inAmount) : Number(outAmount));
     if (type == "Buy" && usd > token.min) {
+      const balance = await getBaseTokenBalance(
+        creator,
+        token.baseTokenAddress
+      );
+      const isNewHolder = Number(balance) - Number(outAmount) == 0;
       console.log(
         "*****",
         type,

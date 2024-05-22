@@ -24,9 +24,7 @@ export default new Commands(
       } else {
         message = {
           id: chatId,
-          message: `🛠 <b>Click button below to see your token list</b>
-  
-  💎💎💎💎💎💎💎💎💎💎💎💎`,
+          message: `🛠 <b>Click button below to see your token list</b>`,
           keyboards: [
             [
               {

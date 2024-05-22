@@ -13,6 +13,7 @@ declare interface TokenInterface {
   quoteTokenName: string;
   quoteTokenSymbol: string;
   quoteTokenDecimals: number;
+  totalSupply: number;
   mediaType: string;
   mediaId: string;
   emoji: string;
