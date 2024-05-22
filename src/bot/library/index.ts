@@ -25,7 +25,9 @@ export const sendMessage = async ({
 export const postMessageWithMedia = async (data: GroupMessageInterface) => {
   try {
     let emoji = data.emoji;
-    emoji = emoji + data.emoji.repeat(data.repeatNumber);
+    for (let i = 0; i < data.repeatNumber; i++) {
+      emoji += data.emoji;
+    }
     if (emoji.length > 50) emoji = emoji.substring(0, 50);
     const newHolder = data.isNewHolder ? `\n⬆️ <b>New Holder</b>` : "";
 

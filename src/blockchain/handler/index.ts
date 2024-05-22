@@ -46,6 +46,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
         creator,
         token.baseTokenAddress
       );
+      const repeatNumber = Math.floor(usd / token.step);
       const isNewHolder = Number(balance) - Number(outAmount) == 0;
       console.log(
         "*****",
@@ -62,7 +63,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
         type: token.mediaType,
         mediaId: token.mediaId,
         emoji: token.emoji,
-        repeatNumber: Math.floor(usd / Number(token.step)),
+        repeatNumber: repeatNumber,
         usdAmount: usd,
         tokenName: token.baseTokenName,
         tokenAddress: token.baseTokenAddress,
