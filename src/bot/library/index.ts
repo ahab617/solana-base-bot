@@ -27,6 +27,7 @@ export const postMessageWithMedia = async (data: GroupMessageInterface) => {
     let emoji = data.emoji;
     emoji = emoji + data.emoji.repeat(data.repeatNumber);
     if (emoji.length > 50) emoji = emoji.substring(0, 50);
+    const newHolder = data.isNewHolder ? `\n⬆️ <b>New Holder</b>` : "";
 
     let message = `<b><a href="${config.baseTokenScanUrl}/${
       data.tokenAddress
@@ -37,13 +38,12 @@ ${emoji}
 ↪️ <b>${numberWithCommas(data.tokenAmount, 3)} ${data.tokenName}</b>
 👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
       config.baseTxScanUrl
-    }/${data.hash}">TX</a>
-    ${data.isNewHolder && `⬆️ <b>New Holder</b>`}
+    }/${data.hash}">TX</a>${newHolder}
 ✅ <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
 
 ➡️ <a href="${data.chartLink}">Chart</a> 🦄 <a href="${
       data.buyLink
-    }">Buy</a> 🪙 <code>By </code><b>@${config.ownerChannel}</b>`;
+    }">Buy</a> 🪙 <a href="${config.ownerChannel}">Telegram</a>`;
 
     if (data.type === "image") {
       await bot.sendPhoto(data.groupId, data.mediaId, {

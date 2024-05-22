@@ -617,6 +617,9 @@ export const deleteToken = async (msg: any) => {
       pairAddress: pairAddress,
     },
   });
+  if (!token) {
+    await sendMessage({ id: chatId, message: "<b>Could not find token.</b>" });
+  }
   const pairName = token.pairName;
 
   await TokenController.deleteOne({
