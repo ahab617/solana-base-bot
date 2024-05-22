@@ -25,15 +25,6 @@ export const sendMessage = async ({
 export const postMessageWithMedia = async (data: GroupMessageInterface) => {
   try {
     let emoji = data.emoji;
-    let links = ``;
-    // let adCaption = data?.adCaption;
-    // let adLink = data?.adLink;
-    // let advertise = "";
-
-    // if (adCaption && adLink) {
-    //   advertise = `<b>Ad: </b><a href="${adLink}">${adCaption}</a>`;
-    // }
-
     emoji = emoji + data.emoji.repeat(data.repeatNumber);
     if (emoji.length > 50) emoji = emoji.substring(0, 50);
 
@@ -47,6 +38,7 @@ ${emoji}
 👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
       config.baseTxScanUrl
     }/${data.hash}">TX</a>
+    ${data.isNewHolder && `⬆️ <b>New Holder</b>`}
 ✅ <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
 
 ➡️ <a href="${data.chartLink}">Chart</a> 🦄 <a href="${

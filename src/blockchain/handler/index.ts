@@ -7,6 +7,7 @@ import { getTransaction, handleEvent } from "blockchain/util";
 import { formatUnits } from "ethers/lib/utils";
 import { getTokenPrice } from "blockchain/monitor/library/world-api";
 import {
+  getBaseTokenBalance,
   getBaseTokenPrice,
   getBaseTokenTotalSupply,
 } from "blockchain/monitor/library/scan-api";
@@ -41,6 +42,8 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
     );
     const totalSupply = await getBaseTokenTotalSupply(token.baseTokenAddress);
     const marketcap = Number(totalSupply) * Number(tokenPrice);
+    const balance = await getBaseTokenBalance(creator, token.baseTokenAddress);
+    const isNewHolder = Number(balance) - Number(outAmount) == 0;
 
     const usd =
       Number(tokenPrice) *
@@ -55,6 +58,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
         hash,
         creator
       );
+
       const groupMessage: GroupMessageInterface = {
         groupId: Number(token.groupId),
         type: token.mediaType,
@@ -70,6 +74,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
         marketcap: marketcap,
         chartLink: token.dexUrl,
         buyLink: "https://app.uniswap.org",
+        isNewHolder: isNewHolder,
       };
 
       await postMessageWithMedia(groupMessage);

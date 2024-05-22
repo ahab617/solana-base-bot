@@ -40,6 +40,7 @@ declare interface GroupMessageInterface {
   marketcap: number;
   chartLink: string;
   buyLink: string;
+  isNewHolder: boolean;
 }
 
 declare interface SendMessageInterface {

@@ -19,8 +19,6 @@ export const getBaseTokenDecimals = async (address: string) => {
     addresses: [address],
   });
 
-  console.log(response.raw[0]);
-
   return Number(response.raw[0].decimals);
 };
 
@@ -52,6 +50,21 @@ export const getBaseTokenPrice = async (
   } catch (err) {
     return null;
   }
+};
+
+export const getBaseTokenBalance = async (
+  address: string,
+  tokenAddress: string
+) => {
+  const response = await Moralis.EvmApi.token.getWalletTokenBalances({
+    chain: "0x2105",
+    address: address,
+    tokenAddresses: [tokenAddress],
+  });
+
+  const raw = response.raw[0] as any;
+  const balance = Number(raw?.balance || 0);
+  return balance;
 };
 
 export const getTransactions = async (address: string) => {
