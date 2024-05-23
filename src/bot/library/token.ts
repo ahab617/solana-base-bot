@@ -3,7 +3,7 @@ import { answerCallbacks, bot } from "../index";
 import { TokenController } from "controller";
 import {
   getBaseTokenMetadata,
-  getSolanaTokenDecimals,
+  getSolanaTokenMetadata,
   getTokenPairs,
 } from "blockchain/monitor/library/scan-api";
 import { startBuyHandler } from "blockchain/monitor/library";
@@ -181,12 +181,16 @@ export const confirmPair = async (msg: any, index: string) => {
       );
       quoteTokenDecimals = quoteTokenMetadata.decimals;
     } else if (selectedPair?.chainId === "solana") {
-      baseTokenDecimals = await getSolanaTokenDecimals(
+      const baseTokenMetadata = await getSolanaTokenMetadata(
         selectedPair?.baseToken.address!
       );
-      quoteTokenDecimals = await getSolanaTokenDecimals(
+      baseTokenDecimals = baseTokenMetadata.decimals;
+      totalSupply = baseTokenMetadata.totalSupply;
+
+      const quoteTokenMetadata = await getSolanaTokenMetadata(
         selectedPair?.quoteToken.address!
       );
+      quoteTokenDecimals = quoteTokenMetadata.decimals;
     }
 
     tokenInfo[chatId] = {

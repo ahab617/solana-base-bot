@@ -59,24 +59,12 @@ export const getBaseTokenBalance = async (
   return balance;
 };
 
-export const getSolanaTokenDecimals = async (address: string) => {
+export const getSolanaTokenMetadata = async (address: string) => {
   const connection = new solanaWeb3.Connection(
     "https://api.mainnet-beta.solana.com"
   );
 
   const publicKey = new solanaWeb3.PublicKey(address);
-  const tokenAccountInfo = await connection.getParsedAccountInfo(publicKey);
-  console.log(
-    "🚀 ~ getSolanaTokenDecimals ~ tokenAccountInfo:",
-    tokenAccountInfo
-  );
-  const info = await connection.getBalance(publicKey);
-  console.log("🚀 ~ getSolanaTokenDecimals ~ info:", info);
-  if (!tokenAccountInfo || !tokenAccountInfo.value) {
-    console.error("Token metadata not found");
-    return null;
-  }
-  const { data } = tokenAccountInfo.value as any;
-  console.log("🚀 ~ getSolanaTokenDecimals ~ data:", data);
-  return Number(data?.parsed?.info.decimals);
+  const mintInfo = await splToken.getMint(connection, publicKey);
+  return { decimals: mintInfo.decimals, totalSupply: mintInfo.supply };
 };

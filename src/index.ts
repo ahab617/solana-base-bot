@@ -19,6 +19,7 @@ const connectDatabase = async (mongoUrl: string) => {
     if (result) {
       console.log("MongoDB connected");
       await Moralis.start({ apiKey: config.APIKey });
+      await initBot();
       await startBuyHandler();
     }
   } catch (err) {
@@ -41,17 +42,6 @@ connectDatabase(config.mongoURI)
     app.listen(config.port, async () => {
       console.log(`Server listening on ${config.port} port`);
     });
-    initBot();
-    await Moralis.start({ apiKey: config.APIKey });
-
-    const response = await Moralis.EvmApi.token.getTokenMetadata({
-      chain: "0x2105",
-      addresses: ["0x5c5EbFa9ffE0D09c2b9F3e1d802c5Ff2Ff2Dd5fe"],
-    });
-
-    console.log(response.raw);
-
-    startBuyHandler();
   })
   .catch((err: any) => {
     console.log(err);
