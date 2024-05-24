@@ -2,7 +2,7 @@ import keccak from "keccak";
 import colors from "colors";
 import cron from "node-cron";
 
-export const handleEvent = async (props: any) => {
+export const baseHandleEvent = async (props: any) => {
   const {
     token,
     provider,
@@ -87,6 +87,10 @@ export const handleEvent = async (props: any) => {
     }
   };
   handleEvent();
+};
+
+export const solanaHandleEvent = async (props: any) => {
+  const { token, times, BlockNumController } = props;
 };
 
 function stripHexPrefix(value: string) {

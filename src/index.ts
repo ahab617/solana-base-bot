@@ -5,6 +5,7 @@ import config from "config.json";
 import { initBot } from "./bot/index";
 import { startBuyHandler } from "blockchain/monitor/library";
 import Moralis from "moralis";
+import axios from "axios";
 
 const app: express.Express = express();
 
@@ -18,7 +19,7 @@ const connectDatabase = async (mongoUrl: string) => {
     const result = await mongoose.connect(mongoUrl, options);
     if (result) {
       console.log("MongoDB connected");
-      await Moralis.start({ apiKey: config.APIKey });
+      await Moralis.start({ apiKey: config.baseAPIKey });
       await initBot();
       await startBuyHandler();
     }

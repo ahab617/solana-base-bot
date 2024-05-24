@@ -1,6 +1,6 @@
 import setlog from "utils/setlog";
 import { TokenController } from "controller";
-import { baseEventHandler } from "blockchain/handler";
+import { baseEventHandler, solanaEventHandler } from "blockchain/handler";
 
 let tokens: TokenInterface[] = [];
 
@@ -25,6 +25,8 @@ const buyEventHandler = async () => {
     if (token && token.pairName && token.groupId) {
       if (token.chainId === "base") {
         baseEventHandler(token);
+      } else if (token.chainId === "solana") {
+        solanaEventHandler(token);
       }
     }
   }

@@ -2,7 +2,7 @@ import colors from "colors";
 import { BigNumber } from "ethers";
 import { BlockNumController } from "../controller/blocknum";
 import { getPairContract, provider } from "blockchain/contracts/providers";
-import { handleEvent } from "blockchain/util";
+import { baseHandleEvent, solanaHandleEvent } from "blockchain/util";
 import { formatUnits } from "ethers/lib/utils";
 import {
   getBaseTokenBalance,
@@ -90,7 +90,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
 };
 
 const baseEventHandler = async (token: TokenInterface, times: number = 15) => {
-  handleEvent({
+  baseHandleEvent({
     token: token,
     provider: provider,
     contract: getPairContract(token.pairAddress),
@@ -101,4 +101,15 @@ const baseEventHandler = async (token: TokenInterface, times: number = 15) => {
   });
 };
 
-export { baseEventHandler };
+const solanaEventHandler = async (
+  token: TokenInterface,
+  times: number = 15
+) => {
+  solanaHandleEvent({
+    token: token,
+    times: times,
+    BlockNumController: BlockNumController,
+  });
+};
+
+export { baseEventHandler, solanaEventHandler };
