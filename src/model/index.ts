@@ -24,6 +24,11 @@ const TokenSchema = new Schema({
   step: Number,
 });
 
+const ChartSchema = new Schema({
+  creator: String,
+  groupId: String,
+});
+
 const AlertSchema = new Schema({
   hash: String,
   groupId: String,

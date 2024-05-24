@@ -1,4 +1,5 @@
 import { sendMessage } from "bot/library";
+import { selectChainForChart } from "bot/library/chart";
 import {
   addToken,
   editToken,

@@ -4,9 +4,9 @@ import config from "config.json";
 const { Commands } = require("../index.ts");
 
 export default new Commands(
-  new RegExp(/^\/setupbuybot/),
-  "Track buys of a token live",
-  "setupbuybot",
+  new RegExp(/^\/setupchart/),
+  "Setup chart bot",
+  "setupchart",
   true,
   async (msg: any) => {
     const chatId = msg.chat.id;
@@ -20,12 +20,12 @@ export default new Commands(
     } else {
       message = {
         id: chatId,
-        message: `🛠 <b>Click button below to add your token for buy bot.</b>`,
+        message: `🛠 <b>Click button below to setup your chart bot.</b>`,
         keyboards: [
           [
             {
-              text: "➡️ Setup Buy Bot",
-              url: config.botUrl + "?start=groupId=" + chatId,
+              text: "➡️ Setup Chart Bot",
+              url: config.botUrl + "?start=groupIdForChart=" + chatId,
             },
           ],
         ],
