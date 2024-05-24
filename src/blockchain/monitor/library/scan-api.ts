@@ -1,7 +1,7 @@
 import axios from "axios";
 import Moralis from "moralis";
-import solanaWeb3 from "@solana/web3.js";
-import splToken from "@solana/spl-token";
+const solanaWeb3 = require("@solana/web3.js");
+const splToken = require("@solana/spl-token");
 
 export const getTokenPairs = async (address: string) => {
   try {

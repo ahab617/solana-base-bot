@@ -174,23 +174,23 @@ export const confirmPair = async (msg: any, index: string) => {
       const baseTokenMetadata = await getBaseTokenMetadata(
         selectedPair?.baseToken.address!
       );
-      baseTokenDecimals = baseTokenMetadata.decimals;
-      totalSupply = baseTokenMetadata.totalSupply;
+      baseTokenDecimals = Number(baseTokenMetadata.decimals);
+      totalSupply = Number(baseTokenMetadata.totalSupply);
       const quoteTokenMetadata = await getBaseTokenMetadata(
         selectedPair?.quoteToken.address!
       );
-      quoteTokenDecimals = quoteTokenMetadata.decimals;
+      quoteTokenDecimals = Number(quoteTokenMetadata.decimals);
     } else if (selectedPair?.chainId === "solana") {
       const baseTokenMetadata = await getSolanaTokenMetadata(
         selectedPair?.baseToken.address!
       );
-      baseTokenDecimals = baseTokenMetadata.decimals;
-      totalSupply = baseTokenMetadata.totalSupply;
+      baseTokenDecimals = Number(baseTokenMetadata.decimals);
+      totalSupply = Number(baseTokenMetadata.totalSupply);
 
       const quoteTokenMetadata = await getSolanaTokenMetadata(
         selectedPair?.quoteToken.address!
       );
-      quoteTokenDecimals = quoteTokenMetadata.decimals;
+      quoteTokenDecimals = Number(quoteTokenMetadata.decimals);
     }
 
     tokenInfo[chatId] = {
