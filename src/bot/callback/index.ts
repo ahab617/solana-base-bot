@@ -80,6 +80,8 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "specificcoin":
       await selectChainForChart(msg, "specificcoin");
       break;
+    case "priceuppercent":
+      break;
     default:
       break;
   }
