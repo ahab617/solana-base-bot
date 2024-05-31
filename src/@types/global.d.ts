@@ -21,12 +21,18 @@ declare interface TokenInterface {
   step: number;
 }
 
+declare interface SolInterface {
+  pairAddress: String;
+  hash: String;
+}
+
 declare interface BlockNumInterface {
   latestTime: number;
   id: string;
 }
 
 declare interface GroupMessageInterface {
+  chain: "solana" | "base";
   groupId: number;
   type: string;
   mediaId: string;

@@ -31,21 +31,23 @@ export const postMessageWithMedia = async (data: GroupMessageInterface) => {
     if (emoji.length > 120) emoji = emoji.substring(0, 120);
     const newHolder = data.isNewHolder ? `\n⬆️ <b>New Holder</b>` : "";
 
-    let message = `<b><a href="${config.baseTokenScanUrl}/${
-      data.tokenAddress
-    }">${data.tokenSymbol}</a> Buy!</b>
+    let message = `<b><a href="${
+      data.chain === "base" ? config.baseTokenScanUrl : config.solTokenScanUrl
+    }/${data.tokenAddress}">${data.tokenSymbol}</a> Buy!</b>
 ${emoji}
 
 💲 <b>$${numberWithCommas(data.usdAmount, 3)}</b>
 ↪️ <b>${numberWithCommas(data.tokenAmount, 3)} ${data.tokenSymbol}</b>
-👤 <a href="${config.baseAddressUrl}/${data.buyer}">Buyer</a> / <a href="${
-      config.baseTxScanUrl
+👤 <a href="${
+      data.chain === "base" ? config.baseAddressUrl : config.solAddressUrl
+    }/${data.buyer}">Buyer</a> / <a href="${
+      data.chain === "base" ? config.baseTxScanUrl : config.solTxScanUrl
     }/${data.hash}">TX</a>${newHolder}
 💰 <b>Market Cap $${numberWithCommas(Number(data.marketcap), 3)}</b>
 
-📊 <a href="${data.chartLink}">Chart</a> 🦄 <a href="${
-      data.buyLink
-    }">Buy</a> 🔥 <b>By ${config.ownerChannel}</b>`;
+📊 <a href="${data.chartLink}">Chart</a> ${
+      data.chain === "base" ? "🦄" : "🪙"
+    } <a href="${data.buyLink}">Buy</a> 🔥 <b>By ${config.ownerChannel}</b>`;
 
     if (data.type === "image") {
       await bot.sendPhoto(data.groupId, data.mediaId, {

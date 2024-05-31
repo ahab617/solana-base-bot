@@ -2,6 +2,7 @@ import { sendMessage } from "bot/library";
 import { editInfo, showList } from "bot/library/token";
 import { chartInfo, setupChartBot } from "bot/library/chart";
 import { bot } from "bot";
+// import { advertiseInfo, showAdvertiseSetting } from "bot/library/advertise";
 
 const { Commands } = require("../index.ts");
 
@@ -16,6 +17,7 @@ export default new Commands(
     const params = text.replace("/start", "").trim();
     const fromGroup = params.indexOf("groupId") > -1;
     const setChart = params.indexOf("groupIdForChart") > -1;
+    console.log(msg.from.username);
 
     if (!fromGroup) {
       await sendMessage({
@@ -32,16 +34,16 @@ export default new Commands(
       const admins = await bot.getChatAdministrators(groupId);
       const hasPermission = admins.some((admin) => admin.user.id === chatId);
 
-      chartInfo[chatId] = {
-        groupid: groupId,
-      };
-
       editInfo[chatId] = {
         groupId: groupId,
       };
 
       if (hasPermission) {
         if (setChart) {
+          chartInfo[chatId] = {
+            groupid: groupId,
+          };
+
           // check if the chart information exists in this group
           await setupChartBot(msg);
         } else {

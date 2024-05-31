@@ -59,6 +59,7 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
       );
 
       const groupMessage: GroupMessageInterface = {
+        chain: "base",
         groupId: Number(token.groupId),
         type: token.mediaType,
         mediaId: token.mediaId,
@@ -101,14 +102,10 @@ const baseEventHandler = async (token: TokenInterface, times: number = 15) => {
   });
 };
 
-const solanaEventHandler = async (
-  token: TokenInterface,
-  times: number = 15
-) => {
+const solanaEventHandler = async (token: TokenInterface, times: number = 5) => {
   solanaHandleEvent({
     token: token,
     times: times,
-    BlockNumController: BlockNumController,
   });
 };
 

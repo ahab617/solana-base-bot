@@ -68,6 +68,18 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "selectPair":
       await confirmPair(msg, action[1]);
       break;
+    case "solanachart":
+      await selectChainForChart(msg, "Solana");
+      break;
+    case "basechart":
+      await selectChainForChart(msg, "Base Chain");
+      break;
+    case "bothchart":
+      await selectChainForChart(msg, "Both");
+      break;
+    case "specificcoin":
+      await selectChainForChart(msg, "specificcoin");
+      break;
     default:
       break;
   }

@@ -68,3 +68,36 @@ export const getSolanaTokenMetadata = async (address: string) => {
   const mintInfo = await splToken.getMint(connection, publicKey);
   return { decimals: mintInfo.decimals, totalSupply: mintInfo.supply };
 };
+
+export const getSolanaTokenBalance = async (
+  address: string,
+  tokenAddress: string
+) => {
+  const response = await axios({
+    url: `https://api.mainnet-beta.solana.com`,
+    method: "post",
+    headers: { "Content-Type": "application/json" },
+    data: [
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+          address,
+          {
+            mint: tokenAddress,
+          },
+          {
+            encoding: "jsonParsed",
+          },
+        ],
+      },
+    ],
+  });
+
+  const amount =
+    response.data[0].result.value[0].account.data.parsed.info.tokenAmount
+      .uiAmount;
+
+  return amount;
+};

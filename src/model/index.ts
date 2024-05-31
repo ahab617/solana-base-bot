@@ -24,8 +24,12 @@ const TokenSchema = new Schema({
   step: Number,
 });
 
+const SolTransactionSchema = new Schema({
+  pairAddress: String,
+  hash: String,
+});
+
 const ChartSchema = new Schema({
-  creator: String,
   groupId: String,
 });
 
@@ -46,3 +50,7 @@ const AdSchema = new Schema({
 export const Alerts = mongoose.model("alerts", AlertSchema);
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
+export const SolTransactions = mongoose.model(
+  "soltransactions",
+  SolTransactionSchema
+);
