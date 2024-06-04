@@ -25,6 +25,7 @@ const TokenSchema = new Schema({
 });
 
 const SolTransactionSchema = new Schema({
+  groupId: String,
   pairAddress: String,
   hash: String,
 });

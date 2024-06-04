@@ -102,10 +102,10 @@ const baseEventHandler = async (token: TokenInterface, times: number = 15) => {
   });
 };
 
-const solanaEventHandler = async (token: TokenInterface, times: number = 5) => {
-  solanaHandleEvent({
+const solanaEventHandler = async (token: TokenInterface) => {
+  await solanaHandleEvent({
     token: token,
-    times: times,
+    times: 10,
   });
 };
 

@@ -96,13 +96,11 @@ export const baseHandleEvent = async (props: any) => {
 
 export const solanaHandleEvent = async (props: any) => {
   const { token, times } = props;
-
   const solanaHandleTransactions = async () => {
     try {
       const data = JSON.stringify({
         query: GET_TRADE_DATA(token.pairAddress, token.quoteTokenAddress),
       });
-
       const params = {
         method: "post",
         url: "https://streaming.bitquery.io/eap",
@@ -129,28 +127,33 @@ export const solanaHandleEvent = async (props: any) => {
             outAmountUsd: trade.Trade?.Sell?.AmountInUSD,
           });
           txarr.push({
+            groupId: token.groupId,
             pairAddress: token.pairAddress,
             hash: trade.Transaction?.Signature || "",
           });
         }
-        txs.reverse();
         const soltxs = await SolController.find({
-          filter: { pairAddress: token.pairAddress },
+          filter: { groupId: token.groupId, pairAddress: token.pairAddress },
         });
         if (soltxs.length > 0) {
+          txs.reverse();
           for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
             const isExist = await SolController.findOne({
-              filter: { pairAddress: token.pairAddress, hash: tx.hash },
+              filter: {
+                groupId: token.groupId,
+                pairAddress: token.pairAddress,
+                hash: tx.hash,
+              },
             });
-            if (!isExist) {
+            if (!isExist && Number(tx.outAmountUsd) > Number(token.min)) {
               const balance = await getSolanaTokenBalance(
                 tx.maker,
                 token.baseTokenAddress
               );
 
               const repeatNumber = Math.floor(
-                Number(tx.AmountInUSD) / token.step
+                Number(tx.outAmountUsd) / Number(token.step)
               );
               const isNewHolder = Number(balance) - Number(tx.amount) == 0;
               const marketcap =
@@ -163,7 +166,7 @@ export const solanaHandleEvent = async (props: any) => {
                 mediaId: token.mediaId,
                 emoji: token.emoji,
                 repeatNumber: repeatNumber,
-                usdAmount: tx.AmountInUSD,
+                usdAmount: tx.outAmountUsd,
                 tokenSymbol: token.baseTokenSymbol,
                 tokenAddress: token.baseTokenAddress,
                 tokenAmount: Math.floor(Number(tx.amount)),
@@ -178,18 +181,20 @@ export const solanaHandleEvent = async (props: any) => {
             }
           }
           await SolController.deleteMany({
-            filter: { pairAddress: token.pairAddress },
-          }).then(async () => {
-            await SolController.insertMany(txarr);
+            filter: { groupId: token.groupId, pairAddress: token.pairAddress },
           });
+
+          await SolController.insertMany(txarr);
         } else {
-          const tx = txs[txs.length - 1];
+          const tx = txs[0];
           const balance = await getSolanaTokenBalance(
             tx.maker,
             token.baseTokenAddress
           );
 
-          const repeatNumber = Math.floor(Number(tx.AmountInUSD) / token.step);
+          const repeatNumber = Math.floor(
+            Number(tx.AmountInUSD) / Number(token.step)
+          );
           const isNewHolder = Number(balance) - Number(tx.amount) == 0;
           const marketcap = Number(token.totalSupply) * Number(tx.PriceInUSD);
 
@@ -200,7 +205,7 @@ export const solanaHandleEvent = async (props: any) => {
             mediaId: token.mediaId,
             emoji: token.emoji,
             repeatNumber: repeatNumber,
-            usdAmount: tx.AmountInUSD,
+            usdAmount: tx.outAmountUsd,
             tokenSymbol: token.baseTokenSymbol,
             tokenAddress: token.baseTokenAddress,
             tokenAmount: Math.floor(Number(tx.amount)),
@@ -226,7 +231,7 @@ export const solanaHandleEvent = async (props: any) => {
     }
   };
 
-  const solanaHandleEvent = async () => {
+  const handleEvent = async () => {
     try {
       cron.schedule(`*/${times} * * * * *`, () => {
         console.log(
@@ -240,9 +245,8 @@ export const solanaHandleEvent = async (props: any) => {
       );
     }
   };
-  solanaHandleEvent();
+  handleEvent();
 };
-
 function stripHexPrefix(value: string) {
   return value.slice(0, 2) === "0x" || value.slice(0, 2) === "0X"
     ? value.slice(2)
@@ -329,6 +333,5 @@ const GET_TRADE_DATA = (pairAddress: string, quoteTokenAddress: string) => {
       }
     }
   }
-
     `;
 };

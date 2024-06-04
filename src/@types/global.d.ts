@@ -22,8 +22,9 @@ declare interface TokenInterface {
 }
 
 declare interface SolInterface {
-  pairAddress: String;
-  hash: String;
+  groupId: string;
+  pairAddress: string;
+  hash: string;
 }
 
 declare interface BlockNumInterface {

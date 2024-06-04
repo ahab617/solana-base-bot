@@ -25,7 +25,7 @@ const buyEventHandler = async () => {
     if (token && token.pairName && token.groupId) {
       if (token.chainId === "base") {
         baseEventHandler(token);
-      } else if (token.chainId === "solana") {
+      } else {
         solanaEventHandler(token);
       }
     }

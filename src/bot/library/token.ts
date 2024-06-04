@@ -8,6 +8,8 @@ import {
 } from "blockchain/monitor/library/scan-api";
 import { startBuyHandler } from "blockchain/monitor/library";
 import { BlockNumController } from "blockchain/controller";
+import SolController from "controller/solcontroller";
+import { formatAddress } from "utils/helper";
 
 export let tokenInfo = {} as any;
 export let editInfo = {} as any;
@@ -30,7 +32,7 @@ export const showList = async (msg: any) => {
       message = `<b>🛠 Please click each token below to edit token information.</b>`;
       const keyboards = tokens.map((token: any, index: number) => [
         {
-          text: token.pairName,
+          text: token.pairName + " (" + formatAddress(token.pairAddress) + ")",
           callback_data: `editToken_${token.pairAddress}`,
         },
       ]);
@@ -127,7 +129,9 @@ export const selectPair = async (msg: any, address: string) => {
   };
   const keyboards = pairs.map((pair: any, index: number) => [
     {
-      text: `${pair.baseToken.symbol} - ${pair.quoteToken.symbol}`,
+      text: `${pair.baseToken.symbol} - ${
+        pair.quoteToken.symbol
+      } (${formatAddress(pair.pairAddress)})`,
       callback_data: `selectPair_${index}`,
     },
   ]);
@@ -647,6 +651,9 @@ export const deleteToken = async (msg: any) => {
         },
       })
         .then(async () => {
+          await SolController.deleteMany({
+            filter: { groupId: groupId, pairAddress: pairAddress },
+          });
           await sendMessage({
             id: chatId,
             message: "👍 <b>Remove Token Success.</b>",
