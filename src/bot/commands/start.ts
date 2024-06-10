@@ -41,7 +41,7 @@ export default new Commands(
       if (hasPermission) {
         if (setChart) {
           chartInfo[chatId] = {
-            groupid: groupId,
+            groupId: groupId,
           };
 
           // check if the chart information exists in this group

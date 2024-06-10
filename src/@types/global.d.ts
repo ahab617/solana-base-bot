@@ -66,3 +66,13 @@ declare interface AdInterface {
   expireTime: Number;
   hash: String;
 }
+
+declare interface ChartInterface {
+  creator: string;
+  groupId: string;
+  chain: string;
+  pairAddress: string;
+  spikeType: string;
+  spike: number;
+  time: number;
+}

@@ -1,5 +1,11 @@
 import { sendMessage } from "bot/library";
-import { selectChainForChart } from "bot/library/chart";
+import {
+  chartInfo,
+  chartPairAddress,
+  chartSettings,
+  inputSpikeChange,
+  saveChart,
+} from "bot/library/chart";
 import {
   addToken,
   editToken,
@@ -68,20 +74,80 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "selectPair":
       await confirmPair(msg, action[1]);
       break;
-    case "solanachart":
-      await selectChainForChart(msg, "Solana");
-      break;
     case "basechart":
-      await selectChainForChart(msg, "Base Chain");
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        chain: "base",
+      };
+      await sendMessage({
+        id: chatId,
+        message:
+          "<b>You selected base chain. Please input token pair address:</b>",
+      });
+      await chartPairAddress(msg);
       break;
-    case "bothchart":
-      await selectChainForChart(msg, "Both");
-      break;
-    case "specificcoin":
-      await selectChainForChart(msg, "specificcoin");
+    case "solanachart":
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        chain: "solana",
+      };
+      await sendMessage({
+        id: chatId,
+        message: "<b>You selected solana. Please input token pair address:</b>",
+      });
+      await chartPairAddress(msg);
       break;
     case "priceuppercent":
+      await inputSpikeChange(msg, "priceuppercent");
       break;
+    case "changeTime":
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please select time:</b>",
+        keyboards: [
+          [
+            { text: "15 minutes", callback_data: "15min" },
+            { text: "30 minutes", callback_data: "30min" },
+            { text: "60 minutes", callback_data: "60min" },
+          ],
+        ],
+      });
+      break;
+    case "15min":
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        time: 15,
+      };
+      await sendMessage({
+        id: chatId,
+        message: "<b>You selected 15 minutes</b>",
+      });
+      await chartSettings(msg);
+      break;
+    case "30min":
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        time: 30,
+      };
+      await sendMessage({
+        id: chatId,
+        message: "<b>You selected 30 minutes</b>",
+      });
+      await chartSettings(msg);
+      break;
+    case "60min":
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        time: 60,
+      };
+      await sendMessage({
+        id: chatId,
+        message: "<b>You selected 60 minutes</b>",
+      });
+      await chartSettings(msg);
+      break;
+    case "savechart":
+      await saveChart(msg);
     default:
       break;
   }

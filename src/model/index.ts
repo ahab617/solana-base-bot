@@ -31,7 +31,13 @@ const SolTransactionSchema = new Schema({
 });
 
 const ChartSchema = new Schema({
+  creator: String,
   groupId: String,
+  chain: String,
+  pairAddress: String,
+  spikeType: String,
+  spike: Number,
+  time: Number,
 });
 
 const AlertSchema = new Schema({
@@ -55,3 +61,4 @@ export const SolTransactions = mongoose.model(
   "soltransactions",
   SolTransactionSchema
 );
+export const Charts = mongoose.model("charts", ChartSchema);
