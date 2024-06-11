@@ -71,6 +71,11 @@ ${emoji}
 
 export const postMessageForSpike = async (data: SpikeInterface) => {
   try {
+    let spike =
+      data.spikeType === "priceuppercent" ||
+      data.spikeType === "pricedownpercent"
+        ? data.spike
+        : Math.trunc(data.spike);
     await sendMessage({
       id: Number(data.groupId),
       message: `Charts by: ${config.ownerChannel}
@@ -99,7 +104,7 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
         data.spikeType === "priceuppercent" ||
         data.spikeType === "pricedownpercent"
           ? `${data.spike}%`
-          : `${Math.trunc(data.spike)}+`
+          : `${spike}+`
       }</b>
 🕔 <b>Within ${data.time}</b>
 ☑️ <b>Market Cap $${numberWithCommas(Number(data.marketcap))}</b>

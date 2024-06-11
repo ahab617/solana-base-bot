@@ -160,6 +160,8 @@ export const callBackHandler = async (msg: any, _action: string) => {
       await saveChart(msg);
     case "deletechart":
       await deleteChart(msg);
+    case "advertise":
+    // await
     default:
       break;
   }
