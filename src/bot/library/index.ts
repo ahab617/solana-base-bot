@@ -68,3 +68,43 @@ ${emoji}
     return false;
   }
 };
+
+export const postMessageForPriceSpike = (data: PriceSpikeInterface) => {
+  try {
+  } catch (err) {
+    console.log(err);
+    console.log("postMessageForPriceSpike sending error");
+    return false;
+  }
+};
+
+export const postMessageForAmountSpike = async (data: PriceSpikeInterface) => {
+  try {
+    await sendMessage({
+      id: Number(data.groupId),
+      message: `Charts by: ${config.ownerChannel}
+
+<b>$${
+        data.spikeType === "priceuppercent" ? "Increase" : "Decrease"
+      } Price Spike!$</b>
+
+💲 <b>$${data.symbol}</b>
+↪️ <b>Price went ${data.spikeType === "priceuppercent" ? "up" : "down"}</b>
+💵 <b>${data.spike}%</b>
+🕔 <b>Within ${data.time}</b>
+☑️ <b>Market Cap $${numberWithCommas(Number(data.marketcap))}</b>
+
+📊 <a href="${data.url}">Chart</a> | ${
+        data.chain === "base"
+          ? "🦄 <a href='https://app.uniswap.org'>Buy</a>"
+          : "🪙 <a href='https://jup.ag/'>Buy</a>"
+      }`,
+      keyboards: [[{ text: ">>Advertise here", callback_data: "advertise" }]],
+      preview: false,
+    });
+  } catch (err) {
+    console.log(err);
+    console.log("postMessageForPriceSpike sending error");
+    return false;
+  }
+};

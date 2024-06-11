@@ -72,8 +72,10 @@ export const chartSettings = async (msg: any) => {
         },
         {
           text: `Within ${
-            chartInf?.spikeType === "priceuppercent" ? chartInf?.time || 60 : 60
-          } minutes`,
+            chartInf?.spikeType === "priceuppercent"
+              ? chartInf?.time || "6h"
+              : "6h"
+          }`,
           callback_data: "changeTime",
         },
       ],
@@ -95,9 +97,9 @@ export const chartSettings = async (msg: any) => {
         {
           text: `Within ${
             chartInf?.spikeType === "pricedownpercent"
-              ? chartInf?.time || 60
-              : 60
-          } minutes`,
+              ? chartInf?.time || "6h"
+              : "6h"
+          }`,
           callback_data: "changeTime",
         },
       ],
@@ -116,8 +118,8 @@ export const chartSettings = async (msg: any) => {
         },
         {
           text: `Within ${
-            chartInf?.spikeType === "buyamount" ? chartInf?.time || 60 : 60
-          } minutes`,
+            chartInf?.spikeType === "buyamount" ? chartInf?.time || "6h" : "6h"
+          }`,
           callback_data: "changeTime",
         },
       ],
@@ -136,8 +138,8 @@ export const chartSettings = async (msg: any) => {
         },
         {
           text: `Within ${
-            chartInf?.spikeType === "buyamount" ? chartInf?.time || 60 : 60
-          } minutes`,
+            chartInf?.spikeType === "buyamount" ? chartInf?.time || "6h" : "6h"
+          }`,
           callback_data: "changeTime",
         },
       ],

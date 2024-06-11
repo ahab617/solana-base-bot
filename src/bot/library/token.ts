@@ -449,6 +449,7 @@ export const editMedia = async (msg: any) => {
             message: "👍 <b>Update Media Success.</b>",
           });
           await showList(msg);
+          await startBuyHandler();
           delete answerCallbacks[chatId];
         })
         .catch(async (err) => {
@@ -497,6 +498,7 @@ export const editEmoji = async (msg: any) => {
           message: "👍 <b>Update Emoji Success.</b>",
         });
         await showList(msg);
+        await startBuyHandler();
         delete answerCallbacks[chatId];
       })
       .catch(async (err) => {
@@ -554,6 +556,7 @@ export const editMin = async (msg: any) => {
           message: "👍 <b>Update Min Usd Amount Success.</b>",
         });
         await showList(msg);
+        await startBuyHandler();
         delete answerCallbacks[chatId];
       })
       .catch(async (err) => {
@@ -610,6 +613,7 @@ export const editStep = async (msg: any) => {
           message: "👍 <b>Update Step Usd Amount Success.</b>",
         });
         await showList(msg);
+        await startBuyHandler();
         delete answerCallbacks[chatId];
       })
       .catch(async (err) => {

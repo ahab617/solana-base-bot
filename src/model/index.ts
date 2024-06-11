@@ -37,7 +37,7 @@ const ChartSchema = new Schema({
   pairAddress: String,
   spikeType: String,
   spike: Number,
-  time: Number,
+  time: String,
 });
 
 const AlertSchema = new Schema({

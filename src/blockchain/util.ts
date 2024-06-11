@@ -4,8 +4,12 @@ import cron from "node-cron";
 import axios from "axios";
 import config from "config.json";
 import SolController from "controller/solcontroller";
-import { getSolanaTokenBalance } from "./monitor/library/scan-api";
-import { postMessageWithMedia } from "bot/library";
+import {
+  getBaseTokenMetadata,
+  getSolanaTokenBalance,
+  getSolanaTokenMetadata,
+} from "./monitor/library/scan-api";
+import { postMessageForPriceSpike, postMessageWithMedia } from "bot/library";
 
 export const baseHandleEvent = async (props: any) => {
   const {
@@ -334,4 +338,92 @@ const GET_TRADE_DATA = (pairAddress: string, quoteTokenAddress: string) => {
     }
   }
     `;
+};
+
+export const chartHandleEvent = async (props: any) => {
+  const { chartInfo, times } = props;
+
+  const handleTokenPair = async () => {
+    try {
+      const response = await axios.get(
+        `https://api.dexscreener.io/latest/dex/pairs/${chartInfo.chain}/${chartInfo.pairAddress}`
+      );
+      const pair = response.data;
+      if (
+        chartInfo.spikeType === "priceuppercent" ||
+        chartInfo.spikeType === "pricedownpercent"
+      ) {
+        let priceChange;
+        let isAlert;
+        switch (chartInfo.time) {
+          case "5min":
+            priceChange = pair.pair.priceChange.m5;
+            break;
+          case "1h":
+            priceChange = pair.pair.priceChange.h1;
+            break;
+          case "6h":
+            priceChange = pair.pair.priceChange.h6;
+            break;
+          default:
+            break;
+        }
+        if (chartInfo.spikeType === "priceuppercent") {
+          isAlert = priceChange - chartInfo.spike > 0;
+        } else {
+          isAlert = priceChange + chartInfo.spike < 0;
+        }
+
+        if (isAlert) {
+          let metadata;
+          if (chartInfo.chain === "solana") {
+            metadata = await getSolanaTokenMetadata(
+              pair.pair.baseToken.address
+            );
+          } else {
+            metadata = await getBaseTokenMetadata(pair.pair.baseToken.address);
+          }
+          const totalSupply = metadata.totalSupply;
+          const mcap = Number(pair.pair.priceUsd) * Number(totalSupply);
+          const data: PriceSpikeInterface = {
+            groupId: chartInfo.groupId,
+            chain: chartInfo.chain,
+            spikeType: chartInfo.spikeType,
+            symbol: pair.pair.baseToken.symbol,
+            time: chartInfo.time,
+            spike: priceChange,
+            url: pair.pair.url,
+            marketcap: mcap,
+          };
+          await postMessageForPriceSpike(data);
+        }
+      } else {
+      }
+    } catch (err) {
+      if (err.reason === "missing response") {
+        console.log(colors.red("you seem offline"));
+      } else if (err.reason === "could not detect network") {
+        console.log(colors.red("could not detect network"));
+      } else {
+        console.log("handletransactions err", err.reason);
+      }
+    }
+  };
+
+  const handleTokenPairEvent = async () => {
+    try {
+      cron.schedule(`*/${times} * * * * `, () => {
+        console.log(
+          `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
+        );
+        handleTokenPair();
+      });
+    } catch (err: any) {
+      console.log(
+        `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle error ${err.message}`
+      );
+    }
+  };
+
+  handleTokenPairEvent();
 };

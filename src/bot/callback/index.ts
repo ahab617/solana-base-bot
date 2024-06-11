@@ -106,43 +106,43 @@ export const callBackHandler = async (msg: any, _action: string) => {
         message: "<b>Please select time:</b>",
         keyboards: [
           [
-            { text: "15 minutes", callback_data: "15min" },
-            { text: "30 minutes", callback_data: "30min" },
-            { text: "60 minutes", callback_data: "60min" },
+            { text: "5 minutes", callback_data: "5min" },
+            { text: "1 hour", callback_data: "1h" },
+            { text: "6 hours", callback_data: "6h" },
           ],
         ],
       });
       break;
-    case "15min":
+    case "5min":
       chartInfo[chatId] = {
         ...chartInfo[chatId],
-        time: 15,
+        time: "5min",
       };
       await sendMessage({
         id: chatId,
-        message: "<b>You selected 15 minutes</b>",
+        message: "<b>You selected 5 minutes</b>",
       });
       await chartSettings(msg);
       break;
-    case "30min":
+    case "1h":
       chartInfo[chatId] = {
         ...chartInfo[chatId],
-        time: 30,
+        time: "1h",
       };
       await sendMessage({
         id: chatId,
-        message: "<b>You selected 30 minutes</b>",
+        message: "<b>You selected 1 hour</b>",
       });
       await chartSettings(msg);
       break;
-    case "60min":
+    case "6h":
       chartInfo[chatId] = {
         ...chartInfo[chatId],
-        time: 60,
+        time: "6h",
       };
       await sendMessage({
         id: chatId,
-        message: "<b>You selected 60 minutes</b>",
+        message: "<b>You selected 6 hours</b>",
       });
       await chartSettings(msg);
       break;

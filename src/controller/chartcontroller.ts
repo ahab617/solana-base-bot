@@ -9,6 +9,18 @@ const create = async (data: ChartInterface) => {
   return true;
 };
 
+const find = async (props: any) => {
+  const { filter } = props;
+  const result = await Charts.find(filter);
+  return result;
+};
+
+const findOne = async (props: any) => {
+  const { filter } = props;
+  const result = await Charts.findOne(filter);
+  return result;
+};
+
 const update = async (props: any) => {
   const { filter, update } = props;
   const result = await Charts.findOneAndUpdate(filter, update);
@@ -23,6 +35,8 @@ const deleteOne = async (props: any) => {
 
 export default {
   create,
+  find,
+  findOne,
   update,
   deleteOne,
 };
