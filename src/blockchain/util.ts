@@ -277,69 +277,6 @@ export const toChecksumAddress = (address: string) => {
   }
 };
 
-export const ZeroAddress = "0x0000000000000000000000000000000000000000";
-
-const GET_TRADE_DATA = (pairAddress: string, quoteTokenAddress: string) => {
-  return `query MyQuery {
-    Solana {
-      DEXTrades(
-        where: {Trade: {Market: {MarketAddress: {is: "${pairAddress}"}}, Buy: {Account: {Address: {}}}, Sell: {Account: {Token: {}}, Currency: {MintAddress: {is: "${quoteTokenAddress}"}}}}, Block: {}, any: {}, Transaction: {Result: {Success: true}}}
-        limit: {count: 20}
-        orderBy: {descending: Block_Time}
-      ) {
-        Trade {
-          Market {
-            MarketAddress
-          }
-          Buy {
-            Amount
-            Account {
-              Address
-            }
-            Currency {
-              MetadataAddress
-              Key
-              IsMutable
-              EditionNonce
-              Decimals
-              CollectionAddress
-              Fungible
-              Symbol
-              Native
-              Name
-              MintAddress
-              ProgramAddress
-            }
-            AmountInUSD
-            PriceInUSD
-            Price
-          }
-          Sell {  
-            Amount
-            AmountInUSD
-            Price
-            PriceInUSD
-            Currency {
-              Symbol
-              Name
-              MintAddress
-              MetadataAddress
-            }
-          }
-          Dex {
-            ProgramAddress
-          }
-        }
-        Transaction {
-          Signer
-          Signature
-        }
-      }
-    }
-  }
-    `;
-};
-
 export const chartHandleEvent = async (props: any) => {
   const { chartInfo, times } = props;
 
@@ -349,7 +286,6 @@ export const chartHandleEvent = async (props: any) => {
         `https://api.dexscreener.io/latest/dex/pairs/${chartInfo.chain}/${chartInfo.pairAddress}`
       );
       const pair = response.data;
-      console.log(chartInfo.pairAddress, pair);
       if (
         chartInfo.spikeType === "priceuppercent" ||
         chartInfo.spikeType === "pricedownpercent"
@@ -437,7 +373,10 @@ export const chartHandleEvent = async (props: any) => {
           }
           try {
             const data = JSON.stringify({
-              query: GET_BASE_AMOUNT_SPIKE(chartInfo.pairAddress, type, 1),
+              query:
+                type === "Buy"
+                  ? GET_BASE_BUY_AMOUNT_SPIKE(chartInfo.pairAddress, number)
+                  : GET_BASE_SELL_AMOUNT_SPIKE(chartInfo.pairAddress, number),
             });
             const params = {
               method: "post",
@@ -448,11 +387,132 @@ export const chartHandleEvent = async (props: any) => {
               },
               data: data,
             };
-            await axios(params).then(async (data: any) => {
+            await axios(params).then(async (res: any) => {
+              const trades = res?.data?.data?.EVM?.DEXTrades || [];
+              let amount = 0;
+              for (let i = 0; i < trades.length; i++) {
+                if (type === "Buy") {
+                  amount += Number(trades[i]?.Trade?.Buy?.Amount);
+                } else {
+                  amount += Number(trades[i]?.Trade?.Sell?.Amount);
+                }
+              }
               console.log(
-                "=======================================================data",
-                data
+                `${type === "Buy" ? "Bought" : "Sold"} `,
+                amount,
+                "tokens on base chain"
               );
+              if (amount > chartInfo.spike) {
+                try {
+                  const metadata = await getBaseTokenMetadata(
+                    pair?.pair?.baseToken?.address
+                  );
+                  const totalSupply = metadata?.totalSupply || 0;
+                  const mcap =
+                    Number(pair?.pair?.priceUsd) * Number(totalSupply);
+                  const data: SpikeInterface = {
+                    groupId: chartInfo.groupId,
+                    chain: chartInfo.chain,
+                    spikeType: chartInfo.spikeType,
+                    symbol: pair?.pair?.baseToken.symbol,
+                    time: chartInfo.time,
+                    spike: amount,
+                    url: pair?.pair?.url,
+                    marketcap: mcap,
+                  };
+                  await postMessageForSpike(data);
+                } catch (err) {
+                  console.log(err);
+                }
+              }
+            });
+          } catch (err) {
+            console.log("Base chain spike error");
+          }
+        } else {
+          let type = chartInfo.spikeType === "buyamount" ? "Buy" : "Sell";
+          let number = 0;
+          console.log("type", type);
+          switch (chartInfo.time) {
+            case "5min":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.m5?.buys;
+              } else {
+                number = pair?.pair?.txns?.m5?.sells;
+              }
+              break;
+            case "1h":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.h1?.buys;
+              } else {
+                number = pair?.pair?.txns?.h1?.sells;
+              }
+              break;
+            case "6h":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.h6?.buys;
+              } else {
+                number = pair?.pair?.txns?.h6?.sells;
+              }
+              break;
+            default:
+              break;
+          }
+          console.log("number", number);
+          try {
+            const data = JSON.stringify({
+              query:
+                type === "Buy"
+                  ? GET_SOLANA_BUY_AMOUNT_SPIKE(chartInfo.pairAddress, number)
+                  : GET_SOLANA_SELL_AMOUNT_SPIKE(chartInfo.pairAddress, number),
+            });
+            const params = {
+              method: "post",
+              url: "https://streaming.bitquery.io/eap",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: config.bitAPIKey,
+              },
+              data: data,
+            };
+            await axios(params).then(async (res: any) => {
+              const trades = res?.data?.data?.Solana?.DEXTrades || [];
+              let amount = 0;
+              for (let i = 0; i < trades.length; i++) {
+                if (type === "Buy") {
+                  amount += Number(trades[i]?.Trade?.Buy?.Amount);
+                } else {
+                  amount += Number(trades[i]?.Trade?.Sell?.Amount);
+                }
+              }
+              console.log(
+                `${type === "Buy" ? "Bought" : "Sold"} `,
+                amount,
+                "tokens on solana"
+              );
+              if (amount > chartInfo.spike) {
+                try {
+                  const metadata = await getSolanaTokenMetadata(
+                    pair?.pair?.baseToken?.address
+                  );
+                  const totalSupply = metadata?.totalSupply || 0;
+                  const mcap =
+                    Number(pair?.pair?.priceUsd) * Number(totalSupply);
+                  const data: SpikeInterface = {
+                    groupId: chartInfo.groupId,
+                    chain: chartInfo.chain,
+                    spikeType: chartInfo.spikeType,
+                    symbol: pair?.pair?.baseToken.symbol,
+                    time: chartInfo.time,
+                    spike: amount,
+                    url: pair?.pair?.url,
+                    marketcap: mcap,
+                  };
+                  await postMessageForSpike(data);
+                } catch (err) {
+                  console.log(err);
+                }
+              }
             });
           } catch (err) {
             console.log("Base chain spike error");
@@ -490,24 +550,139 @@ export const chartHandleEvent = async (props: any) => {
   handleTokenPairEvent();
 };
 
-const GET_BASE_AMOUNT_SPIKE = (
-  pairAddress: string,
-  type: string,
-  count: number
-) => {
+export const ZeroAddress = "0x0000000000000000000000000000000000000000";
+
+const GET_TRADE_DATA = (pairAddress: string, quoteTokenAddress: string) => {
+  return `query MyQuery {
+    Solana {
+      DEXTrades(
+        where: {Trade: {Market: {MarketAddress: {is: "${pairAddress}"}}, Buy: {Account: {Address: {}}}, Sell: {Account: {Token: {}}, Currency: {MintAddress: {is: "${quoteTokenAddress}"}}}}, Block: {}, any: {}, Transaction: {Result: {Success: true}}}
+        limit: {count: 20}
+        orderBy: {descending: Block_Time}
+      ) {
+        Trade {
+          Market {
+            MarketAddress
+          }
+          Buy {
+            Amount
+            Account {
+              Address
+            }
+            Currency {
+              MetadataAddress
+              Key
+              IsMutable
+              EditionNonce
+              Decimals
+              CollectionAddress
+              Fungible
+              Symbol
+              Native
+              Name
+              MintAddress
+              ProgramAddress
+            }
+            AmountInUSD
+            PriceInUSD
+            Price
+          }
+          Sell {  
+            Amount
+            AmountInUSD
+            Price
+            PriceInUSD
+            Currency {
+              Symbol
+              Name
+              MintAddress
+              MetadataAddress
+            }
+          }
+          Dex {
+            ProgramAddress
+          }
+        }
+        Transaction {
+          Signer
+          Signature
+        }
+      }
+    }
+  }
+    `;
+};
+
+const GET_BASE_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
   return `query MyQuery {
     EVM(network: base) {
       DEXTrades(
         limit: {count: ${count}}
-        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: ${pairAddress}}}}}, ChainId: {}}
+        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
         orderBy: {descending: Block_Time}
       ) {
         Trade {
-          ${type} {
+          Buy {
             Amount
           }
         }
       }
     }
   }`;
+};
+
+const GET_BASE_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+  return `query MyQuery {
+    EVM(network: base) {
+      DEXTrades(
+        limit: {count: ${count}}
+        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
+        orderBy: {descending: Block_Time}
+      ) {
+        Trade {
+          Sell {
+            Amount
+          }
+        }
+      }
+    }
+  }`;
+};
+
+const GET_SOLANA_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+  return `query MyQuery {
+  Solana {
+    DEXTrades(
+      where: {Trade: {Buy: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
+      limit: {count: ${count}}
+      orderBy: {descending: Block_Time}
+    ) {
+      Trade {
+        Buy {
+          Amount
+        }
+      }
+    }
+  }
+}
+`;
+};
+
+const GET_SOLANA_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+  return `query MyQuery {
+  Solana {
+    DEXTrades(
+      where: {Trade: {Sell: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
+      limit: {count: ${count}}
+      orderBy: {descending: Block_Time}
+    ) {
+      Trade {
+        Sell {
+          Amount
+        }
+      }
+    }
+  }
+}
+`;
 };

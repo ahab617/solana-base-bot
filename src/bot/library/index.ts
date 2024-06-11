@@ -76,12 +76,31 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
       message: `Charts by: ${config.ownerChannel}
 
 <b>$${
-        data.spikeType === "priceuppercent" ? "Increase" : "Decrease"
-      } Price Spike!$</b>
+        data.spikeType === "priceuppercent"
+          ? "Increase Price"
+          : data.spikeType === "pricedownpercent"
+          ? "Decrease Price"
+          : data.spikeType === "buyamount"
+          ? "Buy"
+          : "Sell"
+      } Spike!$</b>
 
 💲 <b>$${data.symbol}</b>
-↪️ <b>Price went ${data.spikeType === "priceuppercent" ? "up" : "down"}</b>
-💵 <b>${data.spike}%</b>
+↪️ <b>${
+        data.spikeType === "priceuppercent"
+          ? "Price went up"
+          : data.spikeType === "pricedownpercent"
+          ? "Price went down"
+          : data.spikeType === "buyamount"
+          ? "Lot of buying"
+          : "Lot of selling"
+      }</b>
+💵 <b>${
+        data.spikeType === "priceuppercent" ||
+        data.spikeType === "pricedownpercent"
+          ? `${data.spike}%`
+          : `${Math.trunc(data.spike)}+`
+      }</b>
 🕔 <b>Within ${data.time}</b>
 ☑️ <b>Market Cap $${numberWithCommas(Number(data.marketcap))}</b>
 

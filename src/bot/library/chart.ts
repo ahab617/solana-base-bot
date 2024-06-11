@@ -1,6 +1,7 @@
 import { answerCallbacks } from "bot";
 import { sendMessage } from ".";
 import ChartController from "controller/chartcontroller";
+import { startBuyHandler } from "blockchain/monitor/library";
 
 export let chartInfo = {} as any;
 
@@ -225,6 +226,7 @@ export const saveChart = async (msg: any) => {
         message: "<b>Chart settings saved successfully.</b>",
       });
       delete chartInfo[chatId];
+      await startBuyHandler();
     }
   } else {
     await sendMessage({
