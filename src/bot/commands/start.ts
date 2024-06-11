@@ -43,8 +43,6 @@ export default new Commands(
           chartInfo[chatId] = {
             groupId: groupId,
           };
-
-          // check if the chart information exists in this group
           await setupChartBot(msg);
         } else {
           await showList(msg);

@@ -3,6 +3,7 @@ import {
   chartInfo,
   chartPairAddress,
   chartSettings,
+  deleteChart,
   inputSpikeChange,
   saveChart,
 } from "bot/library/chart";
@@ -157,6 +158,8 @@ export const callBackHandler = async (msg: any, _action: string) => {
       break;
     case "savechart":
       await saveChart(msg);
+    case "deletechart":
+      await deleteChart(msg);
     default:
       break;
   }

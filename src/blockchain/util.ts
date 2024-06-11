@@ -432,7 +432,6 @@ export const chartHandleEvent = async (props: any) => {
         } else {
           let type = chartInfo.spikeType === "buyamount" ? "Buy" : "Sell";
           let number = 0;
-          console.log("type", type);
           switch (chartInfo.time) {
             case "5min":
               if (type === "Buy") {
@@ -458,7 +457,6 @@ export const chartHandleEvent = async (props: any) => {
             default:
               break;
           }
-          console.log("number", number);
           try {
             const data = JSON.stringify({
               query:
@@ -532,11 +530,9 @@ export const chartHandleEvent = async (props: any) => {
 
   const handleTokenPairEvent = async () => {
     try {
-      cron.schedule(`*/${1} * * * * `, () => {
+      cron.schedule(`*/${times} * * * * `, () => {
         console.log(
-          `running a ${chartInfo.chain} chart token pair ${
-            chartInfo.pairAddress
-          } handle every ${1} minutes`
+          `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
         );
         handleTokenPair();
       });
