@@ -77,7 +77,7 @@ declare interface ChartInterface {
   time: string;
 }
 
-declare interface PriceSpikeInterface {
+declare interface SpikeInterface {
   chain: string;
   groupId: string;
   url: string;

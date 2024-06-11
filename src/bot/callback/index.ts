@@ -100,6 +100,15 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "priceuppercent":
       await inputSpikeChange(msg, "priceuppercent");
       break;
+    case "pricedownpercent":
+      await inputSpikeChange(msg, "pricedownpercent");
+      break;
+    case "buyamount":
+      await inputSpikeChange(msg, "buyamount");
+      break;
+    case "sellamount":
+      await inputSpikeChange(msg, "sellamount");
+      break;
     case "changeTime":
       await sendMessage({
         id: chatId,

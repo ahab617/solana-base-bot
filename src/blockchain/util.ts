@@ -9,7 +9,7 @@ import {
   getSolanaTokenBalance,
   getSolanaTokenMetadata,
 } from "./monitor/library/scan-api";
-import { postMessageForPriceSpike, postMessageWithMedia } from "bot/library";
+import { postMessageForSpike, postMessageWithMedia } from "bot/library";
 
 export const baseHandleEvent = async (props: any) => {
   const {
@@ -349,55 +349,115 @@ export const chartHandleEvent = async (props: any) => {
         `https://api.dexscreener.io/latest/dex/pairs/${chartInfo.chain}/${chartInfo.pairAddress}`
       );
       const pair = response.data;
+      console.log(chartInfo.pairAddress, pair);
       if (
         chartInfo.spikeType === "priceuppercent" ||
         chartInfo.spikeType === "pricedownpercent"
       ) {
         let priceChange;
-        let isAlert;
+        let isAlert = false;
+        let spikeChange = 0;
         switch (chartInfo.time) {
           case "5min":
-            priceChange = pair.pair.priceChange.m5;
+            priceChange = pair?.pair?.priceChange?.m5;
             break;
           case "1h":
-            priceChange = pair.pair.priceChange.h1;
+            priceChange = pair?.pair?.priceChange?.h1;
             break;
           case "6h":
-            priceChange = pair.pair.priceChange.h6;
+            priceChange = pair?.pair?.priceChange?.h6;
             break;
           default:
             break;
         }
         if (chartInfo.spikeType === "priceuppercent") {
-          isAlert = priceChange - chartInfo.spike > 0;
+          spikeChange = Number(priceChange) - Number(chartInfo.spike);
+          if (spikeChange > 0) isAlert = true;
         } else {
-          isAlert = priceChange + chartInfo.spike < 0;
+          spikeChange = Number(priceChange) + Number(chartInfo.spike);
+          if (spikeChange < 0) isAlert = true;
         }
-
         if (isAlert) {
-          let metadata;
-          if (chartInfo.chain === "solana") {
-            metadata = await getSolanaTokenMetadata(
-              pair.pair.baseToken.address
-            );
-          } else {
-            metadata = await getBaseTokenMetadata(pair.pair.baseToken.address);
+          try {
+            let metadata;
+            if (chartInfo.chain === "solana") {
+              metadata = await getSolanaTokenMetadata(
+                pair?.pair?.baseToken?.address
+              );
+            } else {
+              metadata = await getBaseTokenMetadata(
+                pair?.pair?.baseToken?.address
+              );
+            }
+            const totalSupply = metadata?.totalSupply || 0;
+            const mcap = Number(pair?.pair?.priceUsd) * Number(totalSupply);
+            const data: SpikeInterface = {
+              groupId: chartInfo.groupId,
+              chain: chartInfo.chain,
+              spikeType: chartInfo.spikeType,
+              symbol: pair?.pair?.baseToken.symbol,
+              time: chartInfo.time,
+              spike: priceChange,
+              url: pair?.pair?.url,
+              marketcap: mcap,
+            };
+            await postMessageForSpike(data);
+          } catch (err) {
+            console.log(err);
           }
-          const totalSupply = metadata.totalSupply;
-          const mcap = Number(pair.pair.priceUsd) * Number(totalSupply);
-          const data: PriceSpikeInterface = {
-            groupId: chartInfo.groupId,
-            chain: chartInfo.chain,
-            spikeType: chartInfo.spikeType,
-            symbol: pair.pair.baseToken.symbol,
-            time: chartInfo.time,
-            spike: priceChange,
-            url: pair.pair.url,
-            marketcap: mcap,
-          };
-          await postMessageForPriceSpike(data);
         }
       } else {
+        if (chartInfo.chain === "base") {
+          let type = chartInfo.spikeType === "buyamount" ? "Buy" : "Sell";
+          let number = 0;
+          switch (chartInfo.time) {
+            case "5min":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.m5?.buys;
+              } else {
+                number = pair?.pair?.txns?.m5?.sells;
+              }
+              break;
+            case "1h":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.h1?.buys;
+              } else {
+                number = pair?.pair?.txns?.h1?.sells;
+              }
+              break;
+            case "6h":
+              if (type === "Buy") {
+                number = pair?.pair?.txns?.h6?.buys;
+              } else {
+                number = pair?.pair?.txns?.h6?.sells;
+              }
+              break;
+            default:
+              break;
+          }
+          try {
+            const data = JSON.stringify({
+              query: GET_BASE_AMOUNT_SPIKE(chartInfo.pairAddress, type, 1),
+            });
+            const params = {
+              method: "post",
+              url: "https://streaming.bitquery.io/eap",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: config.bitAPIKey,
+              },
+              data: data,
+            };
+            await axios(params).then(async (data: any) => {
+              console.log(
+                "=======================================================data",
+                data
+              );
+            });
+          } catch (err) {
+            console.log("Base chain spike error");
+          }
+        }
       }
     } catch (err) {
       if (err.reason === "missing response") {
@@ -405,16 +465,18 @@ export const chartHandleEvent = async (props: any) => {
       } else if (err.reason === "could not detect network") {
         console.log(colors.red("could not detect network"));
       } else {
-        console.log("handletransactions err", err.reason);
+        console.log("handletransactions err", err);
       }
     }
   };
 
   const handleTokenPairEvent = async () => {
     try {
-      cron.schedule(`*/${times} * * * * `, () => {
+      cron.schedule(`*/${1} * * * * `, () => {
         console.log(
-          `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
+          `running a ${chartInfo.chain} chart token pair ${
+            chartInfo.pairAddress
+          } handle every ${1} minutes`
         );
         handleTokenPair();
       });
@@ -426,4 +488,26 @@ export const chartHandleEvent = async (props: any) => {
   };
 
   handleTokenPairEvent();
+};
+
+const GET_BASE_AMOUNT_SPIKE = (
+  pairAddress: string,
+  type: string,
+  count: number
+) => {
+  return `query MyQuery {
+    EVM(network: base) {
+      DEXTrades(
+        limit: {count: ${count}}
+        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: ${pairAddress}}}}}, ChainId: {}}
+        orderBy: {descending: Block_Time}
+      ) {
+        Trade {
+          ${type} {
+            Amount
+          }
+        }
+      }
+    }
+  }`;
 };

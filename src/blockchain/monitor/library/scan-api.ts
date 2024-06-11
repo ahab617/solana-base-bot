@@ -60,6 +60,7 @@ export const getBaseTokenBalance = async (
 };
 
 export const getSolanaTokenMetadata = async (address: string) => {
+  if (!address) return null;
   const connection = new solanaWeb3.Connection(
     "https://api.mainnet-beta.solana.com"
   );

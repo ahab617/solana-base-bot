@@ -69,16 +69,7 @@ ${emoji}
   }
 };
 
-export const postMessageForPriceSpike = (data: PriceSpikeInterface) => {
-  try {
-  } catch (err) {
-    console.log(err);
-    console.log("postMessageForPriceSpike sending error");
-    return false;
-  }
-};
-
-export const postMessageForAmountSpike = async (data: PriceSpikeInterface) => {
+export const postMessageForSpike = async (data: SpikeInterface) => {
   try {
     await sendMessage({
       id: Number(data.groupId),
