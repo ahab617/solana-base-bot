@@ -48,9 +48,13 @@ const AlertSchema = new Schema({
 const AdSchema = new Schema({
   creator: String,
   groupId: String,
-  caption: String,
+  chain: String,
+  pairAddress: String,
+  mediaType: String,
+  mediaId: String,
+  description: String,
   link: String,
-  expireTime: Number,
+  package: Number,
   hash: String,
 });
 

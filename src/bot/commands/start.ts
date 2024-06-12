@@ -2,7 +2,7 @@ import { sendMessage } from "bot/library";
 import { editInfo, showList } from "bot/library/token";
 import { chartInfo, setupChartBot } from "bot/library/chart";
 import { bot } from "bot";
-// import { advertiseInfo, showAdvertiseSetting } from "bot/library/advertise";
+import { advertiseInfo, showAdvertise } from "bot/library/advertise";
 
 const { Commands } = require("../index.ts");
 
@@ -17,6 +17,7 @@ export default new Commands(
     const params = text.replace("/start", "").trim();
     const fromGroup = params.indexOf("groupId") > -1;
     const setChart = params.indexOf("groupIdForChart") > -1;
+    const setAd = params.indexOf("groupIdForAdvertise") > -1;
     console.log(msg.from.username);
 
     if (!fromGroup) {
@@ -30,6 +31,8 @@ export default new Commands(
     if (fromGroup) {
       const groupId = setChart
         ? params.replace("groupIdForChart=", "")
+        : setAd
+        ? params.replace("groupIdForAdvertise=", "")
         : params.replace("groupId=", "");
       const admins = await bot.getChatAdministrators(groupId);
       const hasPermission = admins.some((admin) => admin.user.id === chatId);
@@ -38,13 +41,20 @@ export default new Commands(
         groupId: groupId,
       };
 
+      if (setAd) {
+        advertiseInfo[chatId] = {
+          groupId: groupId,
+        };
+        await showAdvertise(msg);
+      }
+
       if (hasPermission) {
         if (setChart) {
           chartInfo[chatId] = {
             groupId: groupId,
           };
           await setupChartBot(msg);
-        } else {
+        } else if (!setAd) {
           await showList(msg);
         }
       } else {

@@ -102,3 +102,10 @@ export const getSolanaTokenBalance = async (
 
   return amount;
 };
+
+export const getPairInformation = async (chain: string, address: string) => {
+  const response = await axios.get(
+    `https://api.dexscreener.io/latest/dex/pairs/${chain}/${address}`
+  );
+  return response.data;
+};

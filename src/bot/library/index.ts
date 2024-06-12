@@ -74,8 +74,8 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
     let spike =
       data.spikeType === "priceuppercent" ||
       data.spikeType === "pricedownpercent"
-        ? data.spike
-        : Math.trunc(data.spike);
+        ? numberWithCommas(data.spike)
+        : numberWithCommas(Math.trunc(data.spike));
     await sendMessage({
       id: Number(data.groupId),
       message: `Charts by: ${config.ownerChannel}
@@ -114,7 +114,17 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
           ? "🦄 <a href='https://app.uniswap.org'>Buy</a>"
           : "🪙 <a href='https://jup.ag/'>Buy</a>"
       }`,
-      keyboards: [[{ text: ">>Advertise here", callback_data: "advertise" }]],
+      keyboards: [
+        [
+          {
+            text: ">>Advertise here",
+            url:
+              config.botUrl +
+              "?start=groupIdForAdvertise=" +
+              Number(data.groupId),
+          },
+        ],
+      ],
       preview: false,
     });
   } catch (err) {

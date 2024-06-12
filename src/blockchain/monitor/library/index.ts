@@ -44,6 +44,7 @@ const buyEventHandler = async () => {
       if (token.chainId === "base") {
         baseEventHandler(token);
       } else {
+        console.log(`Hello token ${token}token`, token);
         solanaEventHandler(token);
       }
     }
@@ -57,6 +58,10 @@ const chartEventHandler = async () => {
 };
 
 const startBuyHandler = async () => {
+  tokens = [];
+  charts = [];
+  buyEventHandler;
+
   await updatePairAddresses();
   await updateChartInfos();
   buyEventHandler();

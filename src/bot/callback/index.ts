@@ -1,4 +1,5 @@
 import { sendMessage } from "bot/library";
+import { advertiseInfo, inputTokenPairAddress } from "bot/library/advertise";
 import {
   chartInfo,
   chartPairAddress,
@@ -158,10 +159,24 @@ export const callBackHandler = async (msg: any, _action: string) => {
       break;
     case "savechart":
       await saveChart(msg);
+      break;
     case "deletechart":
       await deleteChart(msg);
-    case "advertise":
-    // await
+      break;
+    case "baseadvertise":
+      advertiseInfo[chatId] = {
+        ...advertiseInfo[chatId],
+        chain: "base",
+      };
+      await inputTokenPairAddress(msg);
+      break;
+    case "solanaadvertise":
+      advertiseInfo[chatId] = {
+        ...advertiseInfo[chatId],
+        chain: "solana",
+      };
+      await inputTokenPairAddress(msg);
+      break;
     default:
       break;
   }
