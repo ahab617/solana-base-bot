@@ -1,7 +1,6 @@
 import crypto from "crypto";
-import config from "config.json";
 import levels from "level.json";
-import { duration } from "moment";
+import { PublicKey } from "@solana/web3.js";
 
 export const md5 = (plain: string) =>
   crypto.createHash("md5").update(plain).digest("hex");
@@ -72,4 +71,13 @@ export const formatAddress = (_address: string) => {
   const pre = _address.slice(0, 5);
   const sub = _address.substring(_address.length - 4);
   return pre + "..." + sub;
+};
+
+export const isSolAddress = (pubkey: string) => {
+  try {
+    const address = new PublicKey(pubkey);
+    return PublicKey.isOnCurve(address);
+  } catch (err) {
+    return false;
+  }
 };

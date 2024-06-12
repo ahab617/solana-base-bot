@@ -9,6 +9,11 @@ import {
   saveChart,
 } from "bot/library/chart";
 import {
+  inputWalletAddress,
+  saveAdSetting,
+  showPackageSetting,
+} from "bot/library/setupadvertisement";
+import {
   addToken,
   editToken,
   editMedia,
@@ -176,6 +181,24 @@ export const callBackHandler = async (msg: any, _action: string) => {
         chain: "solana",
       };
       await inputTokenPairAddress(msg);
+      break;
+    case "package1setting":
+      await showPackageSetting(msg, "package1setting");
+      break;
+    case "package2setting":
+      await showPackageSetting(msg, "package2setting");
+      break;
+    case "package3setting":
+      await showPackageSetting(msg, "package3setting");
+      break;
+    case "package4setting":
+      await showPackageSetting(msg, "package4setting");
+      break;
+    case "adminwallet":
+      await inputWalletAddress(msg);
+      break;
+    case "saveadsetting":
+      await saveAdSetting(msg);
       break;
     default:
       break;

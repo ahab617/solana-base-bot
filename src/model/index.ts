@@ -58,6 +58,16 @@ const AdSchema = new Schema({
   hash: String,
 });
 
+const AdSettingSchema = new Schema({
+  creator: String,
+  groupId: String,
+  address: String,
+  package1: Object,
+  package2: Object,
+  package3: Object,
+  package4: Object,
+});
+
 export const Alerts = mongoose.model("alerts", AlertSchema);
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
@@ -66,3 +76,4 @@ export const SolTransactions = mongoose.model(
   SolTransactionSchema
 );
 export const Charts = mongoose.model("charts", ChartSchema);
+export const AdSettings = mongoose.model("adsettings", AdSettingSchema);
