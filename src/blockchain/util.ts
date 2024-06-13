@@ -161,7 +161,8 @@ export const solanaHandleEvent = async (props: any) => {
               );
               const isNewHolder = Number(balance) - Number(tx.amount) == 0;
               const marketcap =
-                Number(token.totalSupply) * Number(tx.PriceInUSD);
+                (Number(token.totalSupply) * Number(tx.PriceInUSD)) /
+                10 ** token.baseTokenDecimals;
 
               const groupMessage: GroupMessageInterface = {
                 chain: "solana",
@@ -200,7 +201,9 @@ export const solanaHandleEvent = async (props: any) => {
             Number(tx.AmountInUSD) / Number(token.step)
           );
           const isNewHolder = Number(balance) - Number(tx.amount) == 0;
-          const marketcap = Number(token.totalSupply) * Number(tx.PriceInUSD);
+          const marketcap =
+            (Number(token.totalSupply) * Number(tx.PriceInUSD)) /
+            10 ** token.baseTokenDecimals;
 
           const groupMessage: GroupMessageInterface = {
             chain: "solana",
@@ -326,7 +329,10 @@ export const chartHandleEvent = async (props: any) => {
               );
             }
             const totalSupply = metadata?.totalSupply || 0;
-            const mcap = Number(pair?.pair?.priceUsd) * Number(totalSupply);
+            const decimals = metadata?.decimals || 1;
+            const mcap =
+              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
+              10 ** decimals;
             const data: SpikeInterface = {
               groupId: chartInfo.groupId,
               chain: chartInfo.chain,
@@ -408,8 +414,10 @@ export const chartHandleEvent = async (props: any) => {
                     pair?.pair?.baseToken?.address
                   );
                   const totalSupply = metadata?.totalSupply || 0;
+                  const decimals = metadata?.decimals || 1;
                   const mcap =
-                    Number(pair?.pair?.priceUsd) * Number(totalSupply);
+                    (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
+                    10 ** decimals;
                   const data: SpikeInterface = {
                     groupId: chartInfo.groupId,
                     chain: chartInfo.chain,
@@ -494,8 +502,10 @@ export const chartHandleEvent = async (props: any) => {
                     pair?.pair?.baseToken?.address
                   );
                   const totalSupply = metadata?.totalSupply || 0;
+                  const decimals = metadata?.decimals || 1;
                   const mcap =
-                    Number(pair?.pair?.priceUsd) * Number(totalSupply);
+                    (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
+                    10 ** decimals;
                   const data: SpikeInterface = {
                     groupId: chartInfo.groupId,
                     chain: chartInfo.chain,

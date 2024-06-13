@@ -1,7 +1,7 @@
 import AdsettingController from "controller/adsettingcontroller";
 import { sendMessage } from ".";
 import { answerCallbacks } from "bot";
-import { isSolAddress } from "utils/helper";
+import { isSolanaAddress } from "utils/blockchain";
 
 export let setupAdvertisementSettings = {} as any;
 
@@ -95,7 +95,7 @@ export const inputWalletAddress = async (msg: any) => {
     });
     answerCallbacks[chatId] = async function (answer: any) {
       let address = answer.text;
-      const isWallet = await isSolAddress(address);
+      const isWallet = await isSolanaAddress(address);
       if (isWallet) {
         const isExist = await AdsettingController.findOne({
           filter: { address: address, groupId: { $ne: groupId.toString() } },

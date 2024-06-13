@@ -61,10 +61,15 @@ declare interface SendMessageInterface {
 declare interface AdInterface {
   creator: string;
   groupId: string;
-  caption: String;
-  link: String;
-  expireTime: Number;
-  hash: String;
+  chain: string;
+  pairAddress: string;
+  mediaType: string;
+  mediaId: string;
+  description: string;
+  link: string;
+  package: string;
+  count: number;
+  hash: string;
 }
 
 declare interface ChartInterface {

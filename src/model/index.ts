@@ -54,7 +54,8 @@ const AdSchema = new Schema({
   mediaId: String,
   description: String,
   link: String,
-  package: Number,
+  package: String,
+  count: Number,
   hash: String,
 });
 

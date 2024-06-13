@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import levels from "level.json";
-import { PublicKey } from "@solana/web3.js";
 
 export const md5 = (plain: string) =>
   crypto.createHash("md5").update(plain).digest("hex");
@@ -56,7 +55,7 @@ export const getDuration = (_duration: number) => {
   return { duration: duration, amount: amount as number };
 };
 
-export const getRoundVenomAmount = (value: number) => {
+export const getRoundSolAmount = (value: number) => {
   const _amount = value / 1000000000;
   const amount = Math.round(_amount * 10) / 10;
   return amount as number;
@@ -71,13 +70,4 @@ export const formatAddress = (_address: string) => {
   const pre = _address.slice(0, 5);
   const sub = _address.substring(_address.length - 4);
   return pre + "..." + sub;
-};
-
-export const isSolAddress = (pubkey: string) => {
-  try {
-    const address = new PublicKey(pubkey);
-    return PublicKey.isOnCurve(address);
-  } catch (err) {
-    return false;
-  }
 };

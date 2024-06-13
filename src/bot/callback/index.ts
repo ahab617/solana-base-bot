@@ -1,5 +1,11 @@
 import { sendMessage } from "bot/library";
-import { advertiseInfo, inputTokenPairAddress } from "bot/library/advertise";
+import {
+  advertiseInfo,
+  chooseToken,
+  deleteAdvertise,
+  inputHash,
+  inputTokenPairAddress,
+} from "bot/library/advertise";
 import {
   chartInfo,
   chartPairAddress,
@@ -31,6 +37,7 @@ export const callBackHandler = async (msg: any, _action: string) => {
   const chatId = msg.chat.id;
   const groupId = tokenInfo[chatId]?.groupId;
   const action = _action.split("_");
+  const payAction = _action.split(":");
 
   let message: SendMessageInterface;
 
@@ -199,6 +206,32 @@ export const callBackHandler = async (msg: any, _action: string) => {
       break;
     case "saveadsetting":
       await saveAdSetting(msg);
+      break;
+    case "package1":
+      await chooseToken(msg, "package1");
+      break;
+    case "package2":
+      await chooseToken(msg, "package2");
+      break;
+    case "package3":
+      await chooseToken(msg, "package3");
+      break;
+    case "package4":
+      await chooseToken(msg, "package4");
+      break;
+    case "deleteadvertise":
+      await deleteAdvertise(msg);
+      break;
+    default:
+      break;
+  }
+
+  switch (payAction[0]) {
+    case "payPEKE":
+      await inputHash(msg, "PEKE", Number(payAction[1]));
+      break;
+    case "paySOL":
+      await inputHash(msg, "SOL", Number(payAction[1]));
       break;
     default:
       break;

@@ -6,6 +6,16 @@ import {
   getSolanaTokenMetadata,
 } from "blockchain/monitor/library/scan-api";
 import { numberWithCommas } from "utils";
+import AdSettingController from "controller/adsettingcontroller";
+import config from "config.json";
+import {
+  checkSolTransaction,
+  sendSol,
+  transferSplToken,
+} from "utils/blockchain";
+import { getRoundSolAmount, getTimeDiff } from "utils/helper";
+import AdController from "controller/adcontroller";
+import { startBuyHandler } from "blockchain/monitor/library";
 
 export let advertiseInfo = {} as any;
 
@@ -14,16 +24,37 @@ export const showAdvertise = async (msg: any) => {
   const groupId = advertiseInfo[chatId]?.groupId;
   if (groupId) {
     try {
-      await sendMessage({
-        id: chatId,
-        message: "<b>Please select the correct chain below:</b>",
-        keyboards: [
-          [
-            { text: "Base chain", callback_data: "baseadvertise" },
-            { text: "Solana", callback_data: "solanaadvertise" },
-          ],
-        ],
+      const isExist = await AdController.findOne({
+        filter: {
+          creator: chatId.toString(),
+          groupId: groupId.toString(),
+        },
       });
+      if (isExist) {
+        advertiseInfo[chatId] = {
+          ...advertiseInfo[chatId],
+          creator: chatId.toString(),
+          groupId: groupId.toString(),
+        };
+        await sendMessage({
+          id: chatId,
+          message: "<b>You already purchased advertise in this group.</b>",
+          keyboards: [
+            [{ text: "❌ Delete Ad", callback_data: "deleteadvertise" }],
+          ],
+        });
+      } else {
+        await sendMessage({
+          id: chatId,
+          message: "<b>Please select the correct chain below:</b>",
+          keyboards: [
+            [
+              { text: "Base chain", callback_data: "baseadvertise" },
+              { text: "Solana", callback_data: "solanaadvertise" },
+            ],
+          ],
+        });
+      }
     } catch (err) {
       console.log("Advertise Error");
     }
@@ -75,27 +106,31 @@ export const inputTokenPairAddress = async (msg: any) => {
 
 export const inputDescription = async (msg: any) => {
   const chatId = msg.chat.id;
-  answerCallbacks[chatId] = async function (answer: any) {
-    let description = answer.text;
-    if (description.trim().length < 5 || description.trim().length > 200) {
-      await sendMessage({
-        id: chatId,
-        message:
-          "<b>Invalid text length. Minimum is 5 and Maximum is 200 characters. Please provide the correct description again:</b>",
-      });
-      await inputDescription(msg);
-    } else {
-      advertiseInfo[chatId] = {
-        ...advertiseInfo[chatId],
-        description: description,
-      };
-      await sendMessage({
-        id: chatId,
-        message: "📷 <b>Please attach your image/video.</b>",
-      });
-      await setMedia(msg);
-    }
-  };
+  try {
+    answerCallbacks[chatId] = async function (answer: any) {
+      let description = answer.text;
+      if (description.trim().length < 5 || description.trim().length > 200) {
+        await sendMessage({
+          id: chatId,
+          message:
+            "<b>Invalid text length. Minimum is 5 and Maximum is 200 characters. Please provide the correct description again:</b>",
+        });
+        await inputDescription(msg);
+      } else {
+        advertiseInfo[chatId] = {
+          ...advertiseInfo[chatId],
+          description: description,
+        };
+        await sendMessage({
+          id: chatId,
+          message: "📷 <b>Please attach your image/video.</b>",
+        });
+        await setMedia(msg);
+      }
+    };
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 export const setMedia = async (msg: any) => {
@@ -225,4 +260,244 @@ export const addTelegramGroup = async (msg: any) => {
       await addTelegramGroup(msg);
     }
   };
+};
+
+export const chooseToken = async (msg: any, type: string) => {
+  const chatId = msg.chat.id;
+  const groupId = advertiseInfo[chatId]?.groupId;
+  if (groupId) {
+    try {
+      const adInfo = (await AdSettingController.findOne({
+        filter: { groupId: groupId.toString() },
+      })) as any;
+      let peke;
+      let sol;
+      if (adInfo) {
+        switch (type) {
+          case "package1":
+            advertiseInfo[chatId] = {
+              ...advertiseInfo[chatId],
+              package: "package1",
+              count: 1,
+            };
+            peke = adInfo.package1.peke;
+            sol = adInfo.package1.sol;
+            break;
+          case "package2":
+            advertiseInfo[chatId] = {
+              ...advertiseInfo[chatId],
+              package: "package2",
+              count: 10,
+            };
+            peke = adInfo.package2.peke;
+            sol = adInfo.package2.sol;
+            break;
+          case "package3":
+            advertiseInfo[chatId] = {
+              ...advertiseInfo[chatId],
+              package: "package3",
+              count: 25,
+            };
+            peke = adInfo.package3.peke;
+            sol = adInfo.package3.sol;
+            break;
+          case "package4":
+            advertiseInfo[chatId] = {
+              ...advertiseInfo[chatId],
+              package: "package4",
+              count: 50,
+            };
+            peke = adInfo.package4.peke;
+            sol = adInfo.package4.sol;
+            break;
+          default:
+            break;
+        }
+        await sendMessage({
+          id: chatId,
+          message: "<b>Please select token to pay.</b>",
+          keyboards: [
+            [
+              { text: `${peke} PEKE`, callback_data: "payPEKE" },
+              { text: `${sol} SOL`, callback_data: "paySOL" },
+            ],
+          ],
+        });
+      } else {
+        await sendMessage({
+          id: chatId,
+          message:
+            "<b>Group Admin didn't set package settings yet. Please ask to group.</b>",
+        });
+      }
+    } catch (err) {
+      console.log("Advertise Error");
+    }
+  } else {
+    await sendMessage({
+      id: chatId,
+      message: "<b>You can purchase advertise from only groups.</b>",
+    });
+  }
+};
+
+export const inputHash = async (msg: any, type: string, amount: number) => {
+  const chatId = msg.chat.id;
+  const groupId = advertiseInfo[chatId]?.groupId;
+  if (groupId) {
+    try {
+      await sendMessage({
+        id: chatId,
+        message: `<b>Please send ${amount} ${type} to <code>${config.ownerAddr}</code>
+And then please input transaction hash in 5 mins.</b>`,
+      });
+      answerCallbacks[chatId] = async function (answer: any) {
+        const hash = answer.text.replace("https://solscan.io/tx/", "");
+
+        await sendMessage({
+          id: chatId,
+          message: "<b>Checking transaction hash...</b>",
+        });
+
+        const isHash = await AdController.findOne({ filter: { hash: hash } });
+
+        if (isHash) {
+          await sendMessage({
+            id: chatId,
+            message:
+              "<b>This transaction was already used before. Please use another transaction hash.</b>",
+          });
+          await inputHash(msg, type, amount);
+        } else {
+          var result;
+          if (type === "PEKE") {
+            result = await checkSolTransaction(
+              hash,
+              config.ownerAddr,
+              config.pekeAddress
+            );
+          } else {
+            result = await checkSolTransaction(hash, config.ownerAddr);
+          }
+
+          if (result) {
+            const camount = getRoundSolAmount(result.amount);
+            if (camount < amount) {
+              await sendMessage({
+                id: chatId,
+                message: "<b>Received payment is not enough.</b>",
+              });
+              await inputHash(msg, type, amount);
+            } else if (getTimeDiff(result.blockTime) > 5) {
+              await sendMessage({
+                id: chatId,
+                message: "<b>You didn't pay in 5 minutes.</b>",
+              });
+              await inputHash(msg, type, amount);
+            } else {
+              const data: AdInterface = {
+                creator: chatId.toString(),
+                groupId: groupId.toString(),
+                chain: advertiseInfo[chatId]?.chain,
+                description: advertiseInfo[chatId]?.description,
+                count: advertiseInfo[chatId]?.count,
+                package: advertiseInfo[chatId]?.package,
+                hash: hash,
+                link: advertiseInfo[chatId]?.link,
+                pairAddress: advertiseInfo[chatId]?.pairAddress,
+                mediaId: advertiseInfo[chatId]?.mediaId,
+                mediaType: advertiseInfo[chatId]?.mediaType,
+              };
+
+              await AdController.create(data);
+              await sendMessage({
+                id: chatId,
+                message: "<b>You purchased advertise successfully.</b>",
+              });
+
+              const admin = await AdSettingController.findOne({
+                filter: { groupId: groupId.toString() },
+              });
+
+              if (admin) {
+                const transferAmount = result.amount * 0.7;
+                if (type === "PEKE") {
+                  const tx = await transferSplToken(
+                    config.ownerPrivateKey,
+                    config.pekeAddress,
+                    admin.address,
+                    transferAmount
+                  );
+                  if (tx) {
+                    await sendMessage({
+                      id: Number(admin.creator),
+                      message: `<b>Someone purchased advertise in your group. You received reward.
+Please click <a href="https://solscan.io/tx/${tx}">here</a> to check transaction.</b>`,
+                    });
+                  }
+                } else {
+                  const tx = await sendSol(
+                    transferAmount,
+                    admin.address,
+                    config.ownerPrivateKey
+                  );
+                  if (tx) {
+                    await sendMessage({
+                      id: Number(admin.creator),
+                      message: `<b>Someone purchased advertise in your group. You received reward.
+Please click <a href="https://solscan.io/tx/${tx}">here</a> to check transaction.</b>`,
+                    });
+                  }
+                }
+                delete advertiseInfo[chatId];
+              } else {
+                delete advertiseInfo[chatId];
+              }
+              await startBuyHandler();
+            }
+          } else {
+            await sendMessage({
+              id: chatId,
+              message:
+                "<b>Invalid hash. Please use another transaction hash</b>",
+            });
+            await inputHash(msg, type, amount);
+          }
+        }
+      };
+    } catch (err) {
+      console.log("Advertise Error");
+    }
+  } else {
+    await sendMessage({
+      id: chatId,
+      message: "<b>You can purchase advertise from only groups.</b>",
+    });
+  }
+};
+
+export const deleteAdvertise = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = advertiseInfo[chatId]?.groupId;
+  if (groupId) {
+    try {
+      await AdController.deleteOne({
+        filter: {
+          creator: chatId.toString(),
+          groupId: groupId.toString(),
+        },
+      });
+      await sendMessage({
+        id: chatId,
+        message: "<b>You deleted advertise successfully.</b>",
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  } else {
+    await sendMessage({
+      id: chatId,
+      message: "<b>Please start again from the group.</b>",
+    });
+  }
 };
