@@ -1,7 +1,6 @@
 import setlog from "utils/setlog";
-import { TokenController } from "controller";
+import { ChartController, TokenController } from "controller";
 import { baseEventHandler, solanaEventHandler } from "blockchain/handler";
-import ChartController from "controller/chartcontroller";
 import { chartHandleEvent } from "blockchain/util";
 
 let tokens: TokenInterface[] = [];
@@ -53,7 +52,7 @@ const buyEventHandler = async () => {
 
 const chartEventHandler = async () => {
   for (let i = 0; i < charts.length; i++) {
-    chartHandleEvent({ chartInfo: charts[i], times: 5 });
+    chartHandleEvent({ chartInfo: charts[i] as ChartInterface, times: 5 });
   }
 };
 

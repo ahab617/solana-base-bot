@@ -77,9 +77,14 @@ declare interface ChartInterface {
   groupId: string;
   chain: string;
   pairAddress: string;
-  spikeType: string;
-  spike: number;
-  time: string;
+  priceUpSpike: number;
+  priceUpTime: string;
+  priceDownSpike: number;
+  priceDownTime: string;
+  buySpike: number;
+  buyTime: string;
+  sellSpike: number;
+  sellTime: string;
 }
 
 declare interface SpikeInterface {

@@ -6,7 +6,6 @@ import {
   getSolanaTokenMetadata,
 } from "blockchain/monitor/library/scan-api";
 import { numberWithCommas } from "utils";
-import AdSettingController from "controller/adsettingcontroller";
 import config from "config.json";
 import {
   checkSolTransaction,
@@ -14,8 +13,8 @@ import {
   transferSplToken,
 } from "utils/blockchain";
 import { getRoundSolAmount, getTimeDiff } from "utils/helper";
-import AdController from "controller/adcontroller";
 import { startBuyHandler } from "blockchain/monitor/library";
+import { AdController, AdSettingController } from "controller";
 
 export let advertiseInfo = {} as any;
 

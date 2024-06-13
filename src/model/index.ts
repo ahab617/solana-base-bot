@@ -35,14 +35,14 @@ const ChartSchema = new Schema({
   groupId: String,
   chain: String,
   pairAddress: String,
-  spikeType: String,
-  spike: Number,
-  time: String,
-});
-
-const AlertSchema = new Schema({
-  hash: String,
-  groupId: String,
+  priceUpSpike: Number,
+  priceUpTime: String,
+  priceDownSpike: Number,
+  priceDownTime: String,
+  buySpike: Number,
+  buyTime: String,
+  sellSpike: Number,
+  sellTime: String,
 });
 
 const AdSchema = new Schema({
@@ -69,7 +69,6 @@ const AdSettingSchema = new Schema({
   package4: Object,
 });
 
-export const Alerts = mongoose.model("alerts", AlertSchema);
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
 export const SolTransactions = mongoose.model(

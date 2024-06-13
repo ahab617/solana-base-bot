@@ -1,7 +1,8 @@
 import { answerCallbacks } from "bot";
 import { sendMessage } from ".";
-import ChartController from "controller/chartcontroller";
 import { startBuyHandler } from "blockchain/monitor/library";
+import { advertiseInfo } from "./advertise";
+import { ChartController } from "controller";
 
 export let chartInfo = {} as any;
 
@@ -25,9 +26,14 @@ export const setupChartBot = async (msg: any) => {
         ...chartInfo[chatId],
         chain: chart.chain,
         pairAddress: chart.pairAddress,
-        spikeType: chart.spikeType,
-        spike: chart.spike,
-        time: chart.time,
+        priceUpSpike: chart.priceUpSpike,
+        priceUpTime: chart.priceUpTime,
+        priceDownSpike: chart.priceDownSpike,
+        priceDownTime: chart.priceDownTime,
+        buySpike: chart.buySpike,
+        buyTime: chart.buyTime,
+        sellSpike: chart.sellSpike,
+        sellTime: chart.sellTime,
         isChart: true,
       };
       chartSettings(msg);
@@ -83,18 +89,12 @@ export const chartSettings = async (msg: any) => {
       ],
       [
         {
-          text: `Percentage (min is ${
-            chartInf?.spikeType === "priceuppercent" ? chartInf?.spike || 5 : 5
-          }%)`,
+          text: `Percentage (${chartInf?.priceUpSpike || "min is 5"}%)`,
           callback_data: "priceuppercent",
         },
         {
-          text: `Within ${
-            chartInf?.spikeType === "priceuppercent"
-              ? chartInf?.time || "6h"
-              : "6h"
-          }`,
-          callback_data: "changeTime",
+          text: `Within ${chartInf?.priceUpTime || "6h"}`,
+          callback_data: "priceuptime",
         },
       ],
       [
@@ -105,20 +105,12 @@ export const chartSettings = async (msg: any) => {
       ],
       [
         {
-          text: `Percentage (min is ${
-            chartInf?.spikeType === "pricedownpercent"
-              ? chartInf?.spike || 5
-              : 5
-          }%)`,
+          text: `Percentage (${chartInf?.priceDownSpike || "min is 5"}%)`,
           callback_data: "pricedownpercent",
         },
         {
-          text: `Within ${
-            chartInf?.spikeType === "pricedownpercent"
-              ? chartInf?.time || "6h"
-              : "6h"
-          }`,
-          callback_data: "changeTime",
+          text: `Within ${chartInf?.priceDownTime || "6h"}`,
+          callback_data: "pricedowntime",
         },
       ],
       [
@@ -129,16 +121,12 @@ export const chartSettings = async (msg: any) => {
       ],
       [
         {
-          text: `Amount of buys (minimum ${
-            chartInf?.spikeType === "buyamount" ? chartInf?.spike || 25 : 25
-          })`,
+          text: `Amount of buys (${chartInf?.buySpike || "minimum 25"})`,
           callback_data: "buyamount",
         },
         {
-          text: `Within ${
-            chartInf?.spikeType === "buyamount" ? chartInf?.time || "6h" : "6h"
-          }`,
-          callback_data: "changeTime",
+          text: `Within ${chartInf?.buyTime || "6h"}`,
+          callback_data: "buytime",
         },
       ],
       [
@@ -149,16 +137,12 @@ export const chartSettings = async (msg: any) => {
       ],
       [
         {
-          text: `Amount of sells (minimum ${
-            chartInf?.spikeType === "sellamount" ? chartInf?.spike || 25 : 25
-          })`,
+          text: `Amount of sells (${chartInf?.sellSpike || "minimum 25"})`,
           callback_data: "sellamount",
         },
         {
-          text: `Within ${
-            chartInf?.spikeType === "buyamount" ? chartInf?.time || "6h" : "6h"
-          }`,
-          callback_data: "changeTime",
+          text: `Within ${chartInf?.sellTime || "6h"}`,
+          callback_data: "selltime",
         },
       ],
       [{ text: "Save settings", callback_data: "savechart" }],
@@ -188,7 +172,7 @@ export const chartSettings = async (msg: any) => {
   }
 };
 
-export const inputSpikeChange = async (msg: any, type?: string) => {
+export const inputSpikeChange = async (msg: any, type: string) => {
   const chatId = msg.chat.id;
   const chartInf = chartInfo[chatId];
   const groupId = chartInf?.groupId;
@@ -202,10 +186,6 @@ export const inputSpikeChange = async (msg: any, type?: string) => {
       changeSpike = "amount";
       minSpike = 25;
     }
-    chartInfo[chatId] = {
-      ...chartInfo[chatId],
-      spikeType: type,
-    };
     await sendMessage({
       id: chatId,
       message: `<b>Please input the certain ${changeSpike}:</b>`,
@@ -220,10 +200,34 @@ export const inputSpikeChange = async (msg: any, type?: string) => {
         inputSpikeChange(msg, type);
         return;
       } else {
-        chartInfo[chatId] = {
-          ...chartInfo[chatId],
-          spike: spike,
-        };
+        switch (type) {
+          case "priceuppercent":
+            chartInfo[chatId] = {
+              ...chartInfo[chatId],
+              priceUpSpike: spike,
+            };
+            break;
+          case "pricedownpercent":
+            chartInfo[chatId] = {
+              ...chartInfo[chatId],
+              priceDownSpike: spike,
+            };
+            break;
+          case "buyamount":
+            chartInfo[chatId] = {
+              ...chartInfo[chatId],
+              buySpike: spike,
+            };
+            break;
+          case "sellamount":
+            chartInfo[chatId] = {
+              ...chartInfo[chatId],
+              sellSpike: spike,
+            };
+            break;
+          default:
+            break;
+        }
         chartSettings(msg);
       }
     };
@@ -236,11 +240,88 @@ export const inputSpikeChange = async (msg: any, type?: string) => {
   }
 };
 
+export const showTime = async (msg: any, type: string) => {
+  const chatId = msg.chat.id;
+  chartInfo[chatId] = {
+    ...chartInfo[chatId],
+    spikeType: type,
+  };
+  await sendMessage({
+    id: chatId,
+    message: "<b>Please select time:</b>",
+    keyboards: [
+      [
+        { text: "5 minutes", callback_data: "5min" },
+        { text: "1 hour", callback_data: "1h" },
+        { text: "6 hours", callback_data: "6h" },
+      ],
+    ],
+  });
+};
+
+export const selectTime = async (msg: any, time: string) => {
+  const chatId = msg.chat.id;
+  const spikeType = chartInfo[chatId]?.spikeType;
+  try {
+    if (spikeType) {
+      switch (spikeType) {
+        case "priceup":
+          chartInfo[chatId] = {
+            ...chartInfo[chatId],
+            priceUpTime: time,
+          };
+          break;
+        case "pricedown":
+          chartInfo[chatId] = {
+            ...chartInfo[chatId],
+            priceDownTime: time,
+          };
+          break;
+        case "buy":
+          chartInfo[chatId] = {
+            ...chartInfo[chatId],
+            buyTime: time,
+          };
+          break;
+        case "sell":
+          chartInfo[chatId] = {
+            ...chartInfo[chatId],
+            sellTime: time,
+          };
+          break;
+        default:
+          break;
+      }
+      await sendMessage({
+        id: chatId,
+        message: `<b>You selected ${time}</b>`,
+      });
+      await chartSettings(msg);
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>You didn't select spike type.</b>",
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 export const saveChart = async (msg: any) => {
   const chatId = msg.chat.id;
   const chartInf = chartInfo[chatId];
   if (chartInf?.groupId) {
-    if (!chartInf?.spikeType || !chartInf?.spike || !chartInf?.time) {
+    if (
+      !chartInf?.priceUpSpike ||
+      !chartInf?.priceUpTime ||
+      !chartInf?.priceDownSpike ||
+      !chartInf?.priceDownTime ||
+      !chartInf?.buySpike ||
+      !chartInf?.buyTime ||
+      !chartInf?.sellSpike ||
+      !chartInf?.sellTime
+    ) {
       await sendMessage({
         id: chatId,
         message: "<b>You didn't provide all settings. Please check again:</b>",
@@ -249,9 +330,11 @@ export const saveChart = async (msg: any) => {
     } else {
       if (chartInf?.isChart) {
         delete chartInfo[chatId].isChart;
+        delete chartInfo[chatId].spikeType;
         await ChartController.update(chartInfo[chatId]);
       } else {
         delete chartInfo[chatId].isChart;
+        delete chartInfo[chatId].spikeType;
         await ChartController.create(chartInfo[chatId]);
       }
       await sendMessage({

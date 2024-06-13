@@ -3,7 +3,6 @@ import colors from "colors";
 import cron from "node-cron";
 import axios from "axios";
 import config from "config.json";
-import SolController from "controller/solcontroller";
 import {
   getBaseTokenMetadata,
   getPairInformation,
@@ -16,9 +15,7 @@ import {
   postMessageWithMedia,
   sendMessage,
 } from "bot/library";
-import AdController from "controller/adcontroller";
-import { bot } from "bot";
-import { numberWithCommas } from "utils";
+import { AdController, SolController } from "controller";
 
 export const baseHandleEvent = async (props: any) => {
   const {
@@ -294,272 +291,73 @@ export const chartHandleEvent = async (props: any) => {
 
   const handleTokenPair = async () => {
     try {
-      const response = await axios.get(
-        `https://api.dexscreener.io/latest/dex/pairs/${chartInfo.chain}/${chartInfo.pairAddress}`
+      const pair = await getPairInformation(
+        chartInfo.chain,
+        chartInfo.pairAddress
       );
-      const pair = response.data;
-      if (
-        chartInfo.spikeType === "priceuppercent" ||
-        chartInfo.spikeType === "pricedownpercent"
-      ) {
-        let priceChange;
-        let isAlert = false;
-        let spikeChange = 0;
-        switch (chartInfo.time) {
-          case "5min":
-            priceChange = pair?.pair?.priceChange?.m5;
-            break;
-          case "1h":
-            priceChange = pair?.pair?.priceChange?.h1;
-            break;
-          case "6h":
-            priceChange = pair?.pair?.priceChange?.h6;
-            break;
-          default:
-            break;
-        }
-        if (chartInfo.spikeType === "priceuppercent") {
-          spikeChange = Number(priceChange) - Number(chartInfo.spike);
-          if (spikeChange > 0) isAlert = true;
-        } else {
-          spikeChange = Number(priceChange) + Number(chartInfo.spike);
-          if (spikeChange < 0) isAlert = true;
-        }
-        if (isAlert) {
-          try {
-            let metadata;
-            if (chartInfo.chain === "solana") {
-              metadata = await getSolanaTokenMetadata(
-                pair?.pair?.baseToken?.address
-              );
-            } else {
-              metadata = await getBaseTokenMetadata(
-                pair?.pair?.baseToken?.address
-              );
-            }
-            const totalSupply = metadata?.totalSupply || 0;
-            const decimals = metadata?.decimals || 1;
-            const mcap =
-              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
-              10 ** decimals;
-            const data: SpikeInterface = {
-              groupId: chartInfo.groupId,
-              chain: chartInfo.chain,
-              spikeType: chartInfo.spikeType,
-              symbol: pair?.pair?.baseToken.symbol,
-              time: chartInfo.time,
-              spike: priceChange,
-              url: pair?.pair?.url,
-              marketcap: mcap,
-            };
-            await postMessageForSpike(data);
-          } catch (err) {
-            console.log(err);
-          }
-        }
+      let priceUpChange = 0;
+      let priceDownChange = 0;
+      let buyChange = 0;
+      let sellChange = 0;
+
+      if (chartInfo.priceUpTime === "5min") {
+        priceUpChange = pair?.pair?.priceChange?.m5;
+      } else if (chartInfo.priceUpTime === "1h") {
+        priceUpChange = pair?.pair?.priceChange?.h1;
+      } else if (chartInfo.priceUpTime === "6h") {
+        priceUpChange = pair?.pair?.priceChange?.h6;
+      }
+
+      if (chartInfo.priceDownTime === "5min") {
+        priceDownChange = pair?.pair?.priceChange?.m5;
+      } else if (chartInfo.priceDownTime === "1h") {
+        priceDownChange = pair?.pair?.priceChange?.h1;
+      } else if (chartInfo.priceDownTime === "6h") {
+        priceDownChange = pair?.pair?.priceChange?.h6;
+      }
+
+      if (chartInfo.buyTime === "5min") {
+        buyChange = pair?.pair?.txns?.m5?.buys;
+      } else if (chartInfo.buyTime === "1h") {
+        buyChange = pair?.pair?.txns?.h1?.buys;
+      } else if (chartInfo.buyTime === "6h") {
+        buyChange = pair?.pair?.txns?.h6?.buys;
+      }
+
+      if (chartInfo.sellTime === "5min") {
+        sellChange = pair?.pair?.txns?.m5?.buys;
+      } else if (chartInfo.sellTime === "1h") {
+        sellChange = pair?.pair?.txns?.h1?.buys;
+      } else if (chartInfo.sellTime === "6h") {
+        sellChange = pair?.pair?.txns?.h6?.buys;
+      }
+
+      if (Number(priceUpChange) - Number(chartInfo.priceUpSpike) > 0) {
+        await alertPriceMessage(
+          chartInfo,
+          "priceuppercent",
+          chartInfo.priceUpTime,
+          priceUpChange,
+          pair
+        );
+      }
+
+      if (Number(priceDownChange) + Number(chartInfo.priceDownSpike) < 0) {
+        await alertPriceMessage(
+          chartInfo,
+          "pricedownpercent",
+          chartInfo.priceDownTime,
+          priceDownChange,
+          pair
+        );
+      }
+
+      if (chartInfo.chain === "base") {
+        await baseTradeMessage("buyamount", buyChange, chartInfo);
+        await baseTradeMessage("sellamount", sellChange, chartInfo);
       } else {
-        if (chartInfo.chain === "base") {
-          let type = chartInfo.spikeType === "buyamount" ? "Buy" : "Sell";
-          let number = 0;
-          switch (chartInfo.time) {
-            case "5min":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.m5?.buys;
-              } else {
-                number = pair?.pair?.txns?.m5?.sells;
-              }
-              break;
-            case "1h":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.h1?.buys;
-              } else {
-                number = pair?.pair?.txns?.h1?.sells;
-              }
-              break;
-            case "6h":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.h6?.buys;
-              } else {
-                number = pair?.pair?.txns?.h6?.sells;
-              }
-              break;
-            default:
-              break;
-          }
-          try {
-            const data = JSON.stringify({
-              query:
-                type === "Buy"
-                  ? GET_BASE_BUY_AMOUNT_SPIKE(chartInfo.pairAddress, number)
-                  : GET_BASE_SELL_AMOUNT_SPIKE(chartInfo.pairAddress, number),
-            });
-            const params = {
-              method: "post",
-              url: "https://streaming.bitquery.io/eap",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: config.bitAPIKey,
-              },
-              data: data,
-            };
-            await axios(params).then(async (res: any) => {
-              const trades = res?.data?.data?.EVM?.DEXTrades || [];
-              let amount = 0;
-              for (let i = 0; i < trades.length; i++) {
-                if (type === "Buy") {
-                  amount += Number(trades[i]?.Trade?.Buy?.Amount);
-                } else {
-                  amount += Number(trades[i]?.Trade?.Sell?.Amount);
-                }
-              }
-              console.log(
-                `${type === "Buy" ? "Bought" : "Sold"} `,
-                amount,
-                "tokens on base chain"
-              );
-              if (amount > chartInfo.spike) {
-                try {
-                  const metadata = await getBaseTokenMetadata(
-                    pair?.pair?.baseToken?.address
-                  );
-                  const totalSupply = metadata?.totalSupply || 0;
-                  const decimals = metadata?.decimals || 1;
-                  const mcap =
-                    (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
-                    10 ** decimals;
-                  const data: SpikeInterface = {
-                    groupId: chartInfo.groupId,
-                    chain: chartInfo.chain,
-                    spikeType: chartInfo.spikeType,
-                    symbol: pair?.pair?.baseToken.symbol,
-                    time: chartInfo.time,
-                    spike: amount,
-                    url: pair?.pair?.url,
-                    marketcap: mcap,
-                  };
-                  await postMessageForSpike(data);
-                  const ads = await AdController.find({
-                    filter: { groupId: chartInfo.groupId },
-                  });
-                  if (ads.length > 0) {
-                    const randIdx = Math.floor(Math.random() * ads.length);
-                    const ad = ads[randIdx] as AdInterface;
-                    if (ad.count < 2) {
-                      await postMessageForAdvertise(ad);
-                      await sendMessage({
-                        id: Number(ad.creator),
-                        message: "<b>Your advertise was just expired.</b>",
-                      });
-                      await AdController.deleteOne({
-                        filter: { creator: ad.creator, groupId: ad.groupId },
-                      });
-                    } else {
-                      await postMessageForAdvertise(ad);
-                      await AdController.update({
-                        filter: { creator: ad.creator, groupId: ad.groupId },
-                        update: {
-                          count: ad.count - 1,
-                        },
-                      });
-                    }
-                  }
-                } catch (err) {
-                  console.log(err);
-                }
-              }
-            });
-          } catch (err) {
-            console.log("Base chain spike error");
-          }
-        } else {
-          let type = chartInfo.spikeType === "buyamount" ? "Buy" : "Sell";
-          let number = 0;
-          switch (chartInfo.time) {
-            case "5min":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.m5?.buys;
-              } else {
-                number = pair?.pair?.txns?.m5?.sells;
-              }
-              break;
-            case "1h":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.h1?.buys;
-              } else {
-                number = pair?.pair?.txns?.h1?.sells;
-              }
-              break;
-            case "6h":
-              if (type === "Buy") {
-                number = pair?.pair?.txns?.h6?.buys;
-              } else {
-                number = pair?.pair?.txns?.h6?.sells;
-              }
-              break;
-            default:
-              break;
-          }
-          try {
-            const data = JSON.stringify({
-              query:
-                type === "Buy"
-                  ? GET_SOLANA_BUY_AMOUNT_SPIKE(chartInfo.pairAddress, number)
-                  : GET_SOLANA_SELL_AMOUNT_SPIKE(chartInfo.pairAddress, number),
-            });
-            const params = {
-              method: "post",
-              url: "https://streaming.bitquery.io/eap",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: config.bitAPIKey,
-              },
-              data: data,
-            };
-            await axios(params).then(async (res: any) => {
-              const trades = res?.data?.data?.Solana?.DEXTrades || [];
-              let amount = 0;
-              for (let i = 0; i < trades.length; i++) {
-                if (type === "Buy") {
-                  amount += Number(trades[i]?.Trade?.Buy?.Amount);
-                } else {
-                  amount += Number(trades[i]?.Trade?.Sell?.Amount);
-                }
-              }
-              console.log(
-                `${type === "Buy" ? "Bought" : "Sold"} `,
-                amount,
-                "tokens on solana"
-              );
-              if (amount > chartInfo.spike) {
-                try {
-                  const metadata = await getSolanaTokenMetadata(
-                    pair?.pair?.baseToken?.address
-                  );
-                  const totalSupply = metadata?.totalSupply || 0;
-                  const decimals = metadata?.decimals || 1;
-                  const mcap =
-                    (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
-                    10 ** decimals;
-                  const data: SpikeInterface = {
-                    groupId: chartInfo.groupId,
-                    chain: chartInfo.chain,
-                    spikeType: chartInfo.spikeType,
-                    symbol: pair?.pair?.baseToken.symbol,
-                    time: chartInfo.time,
-                    spike: amount,
-                    url: pair?.pair?.url,
-                    marketcap: mcap,
-                  };
-                  await postMessageForSpike(data);
-                } catch (err) {
-                  console.log(err);
-                }
-              }
-            });
-          } catch (err) {
-            console.log("Base chain spike error");
-          }
-        }
+        await solTradeMessage("buyamount", buyChange, chartInfo);
+        await solTradeMessage("sellamount", sellChange, chartInfo);
       }
     } catch (err) {
       if (err.reason === "missing response") {
@@ -568,6 +366,213 @@ export const chartHandleEvent = async (props: any) => {
         console.log(colors.red("could not detect network"));
       } else {
         console.log("handletransactions err", err);
+      }
+    }
+  };
+
+  const alertPriceMessage = async (
+    chart: ChartInterface,
+    type: string,
+    time: string,
+    priceChange: number,
+    pair: any
+  ) => {
+    try {
+      let metadata;
+      if (chart.chain === "solana") {
+        metadata = await getSolanaTokenMetadata(pair?.pair?.baseToken?.address);
+      } else {
+        metadata = await getBaseTokenMetadata(pair?.pair?.baseToken?.address);
+      }
+      const totalSupply = metadata?.totalSupply || 0;
+      const decimals = metadata?.decimals || 1;
+      const mcap =
+        (Number(pair?.pair?.priceUsd) * Number(totalSupply)) / 10 ** decimals;
+      const data: SpikeInterface = {
+        groupId: chart.groupId,
+        chain: chart.chain,
+        spikeType: type,
+        symbol: pair?.pair?.baseToken.symbol,
+        time: time,
+        spike: priceChange,
+        url: pair?.pair?.url,
+        marketcap: mcap,
+      };
+      await postMessageForSpike(data);
+      await showAdMessage();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const baseTradeMessage = async (
+    type: string,
+    limit: number,
+    chart: ChartInterface
+  ) => {
+    try {
+      const pair = await getPairInformation(chart.chain, chart.pairAddress);
+      const data = JSON.stringify({
+        query:
+          type === "buyamount"
+            ? GET_BASE_BUY_AMOUNT_SPIKE(chart.pairAddress, limit)
+            : GET_BASE_SELL_AMOUNT_SPIKE(chart.pairAddress, limit),
+      });
+      const params = {
+        method: "post",
+        url: "https://streaming.bitquery.io/eap",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: config.bitAPIKey,
+        },
+        data: data,
+      };
+      await axios(params).then(async (res: any) => {
+        const trades = res?.data?.data?.EVM?.DEXTrades || [];
+        let amount = 0;
+        for (let i = 0; i < trades.length; i++) {
+          if (type === "buyamount") {
+            amount += Number(trades[i]?.Trade?.Buy?.Amount);
+          } else {
+            amount += Number(trades[i]?.Trade?.Sell?.Amount);
+          }
+        }
+        console.log(
+          `${type === "buyamount" ? "Bought" : "Sold"} `,
+          amount,
+          "tokens on base chain"
+        );
+        if (
+          (type === "buyamount" && amount > chart.buySpike) ||
+          (type === "sellamount" && amount > chart.sellSpike)
+        ) {
+          try {
+            const metadata = await getBaseTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+            const totalSupply = metadata?.totalSupply || 0;
+            const decimals = metadata?.decimals || 1;
+            const mcap =
+              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
+              10 ** decimals;
+            const data: SpikeInterface = {
+              groupId: chart.groupId,
+              chain: chart.chain,
+              spikeType: type,
+              symbol: pair?.pair?.baseToken.symbol,
+              time: type === "buyamount" ? chart.buyTime : chart.sellTime,
+              spike: amount,
+              url: pair?.pair?.url,
+              marketcap: mcap,
+            };
+            await postMessageForSpike(data);
+            await showAdMessage();
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      });
+    } catch (err) {
+      console.log("Base chain spike error");
+    }
+  };
+
+  const solTradeMessage = async (
+    type: string,
+    limit: number,
+    chart: ChartInterface
+  ) => {
+    try {
+      const pair = await getPairInformation(chart.chain, chart.pairAddress);
+      const data = JSON.stringify({
+        query:
+          type === "buyamount"
+            ? GET_SOLANA_BUY_AMOUNT_SPIKE(chart.pairAddress, limit)
+            : GET_SOLANA_SELL_AMOUNT_SPIKE(chart.pairAddress, limit),
+      });
+      const params = {
+        method: "post",
+        url: "https://streaming.bitquery.io/eap",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: config.bitAPIKey,
+        },
+        data: data,
+      };
+      await axios(params).then(async (res: any) => {
+        const trades = res?.data?.data?.Solana?.DEXTrades || [];
+        let amount = 0;
+        for (let i = 0; i < trades.length; i++) {
+          if (type === "buyamount") {
+            amount += Number(trades[i]?.Trade?.Buy?.Amount);
+          } else {
+            amount += Number(trades[i]?.Trade?.Sell?.Amount);
+          }
+        }
+        console.log(
+          `${type === "buyamount" ? "Bought" : "Sold"} `,
+          amount,
+          "tokens on solana"
+        );
+        if (
+          (type === "buyamount" && amount > chart.buySpike) ||
+          (type === "sellamount" && amount > chart.sellSpike)
+        ) {
+          try {
+            const metadata = await getSolanaTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+            const totalSupply = metadata?.totalSupply || 0;
+            const decimals = metadata?.decimals || 1;
+            const mcap =
+              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
+              10 ** decimals;
+            const data: SpikeInterface = {
+              groupId: chart.groupId,
+              chain: chart.chain,
+              spikeType: type,
+              symbol: pair?.pair?.baseToken.symbol,
+              time: type === "buyamount" ? chart.buyTime : chart.sellTime,
+              spike: amount,
+              url: pair?.pair?.url,
+              marketcap: mcap,
+            };
+            await postMessageForSpike(data);
+            await showAdMessage();
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      });
+    } catch (err) {
+      console.log("Base chain spike error");
+    }
+  };
+
+  const showAdMessage = async () => {
+    const ads = await AdController.find({
+      filter: { groupId: chartInfo.groupId },
+    });
+    if (ads.length > 0) {
+      const randIdx = Math.floor(Math.random() * ads.length);
+      const ad = ads[randIdx] as AdInterface;
+      if (ad.count < 2) {
+        await postMessageForAdvertise(ad);
+        await sendMessage({
+          id: Number(ad.creator),
+          message: "<b>Your advertise was just expired.</b>",
+        });
+        await AdController.deleteOne({
+          filter: { creator: ad.creator, groupId: ad.groupId },
+        });
+      } else {
+        await postMessageForAdvertise(ad);
+        await AdController.update({
+          filter: { creator: ad.creator, groupId: ad.groupId },
+          update: {
+            count: ad.count - 1,
+          },
+        });
       }
     }
   };

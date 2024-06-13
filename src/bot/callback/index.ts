@@ -13,6 +13,8 @@ import {
   deleteChart,
   inputSpikeChange,
   saveChart,
+  selectTime,
+  showTime,
 } from "bot/library/chart";
 import {
   inputWalletAddress,
@@ -123,51 +125,26 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "sellamount":
       await inputSpikeChange(msg, "sellamount");
       break;
-    case "changeTime":
-      await sendMessage({
-        id: chatId,
-        message: "<b>Please select time:</b>",
-        keyboards: [
-          [
-            { text: "5 minutes", callback_data: "5min" },
-            { text: "1 hour", callback_data: "1h" },
-            { text: "6 hours", callback_data: "6h" },
-          ],
-        ],
-      });
+    case "priceuptime":
+      await showTime(msg, "priceup");
+      break;
+    case "pricedowntime":
+      await showTime(msg, "pricedown");
+      break;
+    case "buytime":
+      await showTime(msg, "buy");
+      break;
+    case "selltime":
+      await showTime(msg, "sell");
       break;
     case "5min":
-      chartInfo[chatId] = {
-        ...chartInfo[chatId],
-        time: "5min",
-      };
-      await sendMessage({
-        id: chatId,
-        message: "<b>You selected 5 minutes</b>",
-      });
-      await chartSettings(msg);
+      await selectTime(msg, "5min");
       break;
     case "1h":
-      chartInfo[chatId] = {
-        ...chartInfo[chatId],
-        time: "1h",
-      };
-      await sendMessage({
-        id: chatId,
-        message: "<b>You selected 1 hour</b>",
-      });
-      await chartSettings(msg);
+      await selectTime(msg, "1h");
       break;
     case "6h":
-      chartInfo[chatId] = {
-        ...chartInfo[chatId],
-        time: "6h",
-      };
-      await sendMessage({
-        id: chatId,
-        message: "<b>You selected 6 hours</b>",
-      });
-      await chartSettings(msg);
+      await selectTime(msg, "6h");
       break;
     case "savechart":
       await saveChart(msg);
