@@ -190,7 +190,8 @@ export const addTelegramGroup = async (msg: any) => {
         metadata = await getSolanaTokenMetadata(pair?.pair?.baseToken?.address);
       }
       const marketcap =
-        Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply);
+        (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
+        10 ** Number(metadata?.decimals);
       if (advertiseInfo[chatId]?.mediaType === "image") {
         await bot.sendPhoto(chatId, advertiseInfo[chatId]?.mediaId, {
           caption: `${advertiseInfo[chatId]?.description}
@@ -203,7 +204,7 @@ export const addTelegramGroup = async (msg: any) => {
 <b>Group: </b>${advertiseInfo[chatId]?.link}
 📊 <a href="${pair?.pair?.url}">Chart</a> ${
             advertiseInfo[chatId]?.chain === "base"
-              ? `🦄 <a href='https://jup.ag/'>Buy</a>`
+              ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
               : `🪙 <a href='https://jup.ag/'>Buy</a>`
           }`,
           parse_mode: "HTML",
@@ -220,7 +221,7 @@ export const addTelegramGroup = async (msg: any) => {
 <b>Group: </b>${advertiseInfo[chatId]?.link}
 📊 <a href="${pair?.pair?.url}">Chart</a> ${
             advertiseInfo[chatId]?.chain === "base"
-              ? `🦄 <a href='https://jup.ag/'>Buy</a>`
+              ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
               : `🪙 <a href='https://jup.ag/'>Buy</a>`
           }`,
           parse_mode: "HTML",

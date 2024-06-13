@@ -6,10 +6,19 @@ import config from "config.json";
 import SolController from "controller/solcontroller";
 import {
   getBaseTokenMetadata,
+  getPairInformation,
   getSolanaTokenBalance,
   getSolanaTokenMetadata,
 } from "./monitor/library/scan-api";
-import { postMessageForSpike, postMessageWithMedia } from "bot/library";
+import {
+  postMessageForAdvertise,
+  postMessageForSpike,
+  postMessageWithMedia,
+  sendMessage,
+} from "bot/library";
+import AdController from "controller/adcontroller";
+import { bot } from "bot";
+import { numberWithCommas } from "utils";
 
 export const baseHandleEvent = async (props: any) => {
   const {
@@ -429,6 +438,31 @@ export const chartHandleEvent = async (props: any) => {
                     marketcap: mcap,
                   };
                   await postMessageForSpike(data);
+                  const ads = await AdController.find({
+                    filter: { groupId: chartInfo.groupId },
+                  });
+                  if (ads.length > 0) {
+                    const randIdx = Math.floor(Math.random() * ads.length);
+                    const ad = ads[randIdx] as AdInterface;
+                    if (ad.count < 2) {
+                      await postMessageForAdvertise(ad);
+                      await sendMessage({
+                        id: Number(ad.creator),
+                        message: "<b>Your advertise was just expired.</b>",
+                      });
+                      await AdController.deleteOne({
+                        filter: { creator: ad.creator, groupId: ad.groupId },
+                      });
+                    } else {
+                      await postMessageForAdvertise(ad);
+                      await AdController.update({
+                        filter: { creator: ad.creator, groupId: ad.groupId },
+                        update: {
+                          count: ad.count - 1,
+                        },
+                      });
+                    }
+                  }
                 } catch (err) {
                   console.log(err);
                 }
