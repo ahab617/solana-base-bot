@@ -21,6 +21,7 @@ import {
   saveAdSetting,
   showPackageSetting,
 } from "bot/library/setupadvertisement";
+import { setSubscriptionCost } from "bot/library/subscriptioncost";
 import {
   addToken,
   editToken,

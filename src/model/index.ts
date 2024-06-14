@@ -69,6 +69,12 @@ const AdSettingSchema = new Schema({
   package4: Object,
 });
 
+const TokenCostSchema = new Schema({
+  creator: String,
+  peke: Number,
+  sol: Number,
+});
+
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
 export const SolTransactions = mongoose.model(
@@ -77,3 +83,4 @@ export const SolTransactions = mongoose.model(
 );
 export const Charts = mongoose.model("charts", ChartSchema);
 export const AdSettings = mongoose.model("adsettings", AdSettingSchema);
+export const TokenCosts = mongoose.model("tokencosts", TokenCostSchema);

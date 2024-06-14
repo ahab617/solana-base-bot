@@ -97,3 +97,9 @@ declare interface SpikeInterface {
   time: string;
   marketcap: number;
 }
+
+declare interface TokenCostInterface {
+  creator: string;
+  peke: number;
+  sol: number;
+}

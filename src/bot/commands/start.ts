@@ -24,6 +24,7 @@ export default new Commands(
     const setAd = params.indexOf("groupIdForAdvertise") > -1;
     const setupAdvertisement = params.indexOf("groupIdsetupAdvertisement") > -1;
     console.log(msg.from.username);
+    console.log(msg.from.id);
 
     if (!fromGroup) {
       await sendMessage({

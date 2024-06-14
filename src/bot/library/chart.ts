@@ -1,7 +1,6 @@
 import { answerCallbacks } from "bot";
 import { sendMessage } from ".";
 import { startBuyHandler } from "blockchain/monitor/library";
-import { advertiseInfo } from "./advertise";
 import { ChartController } from "controller";
 
 export let chartInfo = {} as any;

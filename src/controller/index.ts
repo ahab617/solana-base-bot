@@ -3,6 +3,7 @@ import AdController from "./adcontroller";
 import AdSettingController from "./adsettingcontroller";
 import ChartController from "./chartcontroller";
 import SolController from "./solcontroller";
+import TokenCostController from "./tokencostcontroller";
 
 export {
   TokenController,
@@ -10,4 +11,5 @@ export {
   AdSettingController,
   ChartController,
   SolController,
+  TokenCostController,
 };
