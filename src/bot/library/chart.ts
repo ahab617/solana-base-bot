@@ -86,24 +86,43 @@ export const setupChartBot = async (msg: any) => {
   const groupId = chartInfo[chatId]?.groupId;
 
   if (groupId) {
-    chartInfo[chatId] = {
-      ...chartInfo[chatId],
-      creator: chatId.toString(),
-      groupId: groupId.toString(),
-    };
+    const charts = await ChartController.find({
+      filter: { groupId: groupId.toString() },
+    });
+    const isPremium = TwitterController.findOne({
+      filter: { groupId: groupId.toString() },
+    });
 
-    await sendMessage({
-      id: chatId,
-      message: `<b>🛠 Chart Bot Setup</b>
+    if (isPremium && !(charts.length < 24)) {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Maximum number of tracking pairs for premium is 25.</b>",
+      });
+    } else if (!isPremium && !(charts.length < 5)) {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Maximum number of tracking pairs for premium is 5.</b>",
+      });
+    } else {
+      chartInfo[chatId] = {
+        ...chartInfo[chatId],
+        creator: chatId.toString(),
+        groupId: groupId.toString(),
+      };
+
+      await sendMessage({
+        id: chatId,
+        message: `<b>🛠 Chart Bot Setup</b>
 
 <b>Please select chain:</b>`,
-      keyboards: [
-        [
-          { text: "Base Chain", callback_data: "basechart" },
-          { text: "Solana", callback_data: "solanachart" },
+        keyboards: [
+          [
+            { text: "Base Chain", callback_data: "basechart" },
+            { text: "Solana", callback_data: "solanachart" },
+          ],
         ],
-      ],
-    });
+      });
+    }
   } else {
     await sendMessage({
       id: chatId,
