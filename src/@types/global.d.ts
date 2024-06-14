@@ -103,3 +103,14 @@ declare interface TokenCostInterface {
   peke: number;
   sol: number;
 }
+
+declare interface TwitterInterface {
+  creator: string;
+  groupId: string;
+  appKey: string;
+  appSecret: string;
+  accessToken: string;
+  accessSecret: string;
+  hash: string;
+  expiredTime: number;
+}

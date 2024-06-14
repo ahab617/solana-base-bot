@@ -318,8 +318,8 @@ export const chooseToken = async (msg: any, type: string) => {
           message: "<b>Please select token to pay.</b>",
           keyboards: [
             [
-              { text: `${peke} PEKE`, callback_data: "payPEKE" },
-              { text: `${sol} SOL`, callback_data: "paySOL" },
+              { text: `${peke} PEKE`, callback_data: `payPEKE:${peke}` },
+              { text: `${sol} SOL`, callback_data: `paySOL:${sol}` },
             ],
           ],
         });

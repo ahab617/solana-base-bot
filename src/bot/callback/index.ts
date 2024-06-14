@@ -17,9 +17,11 @@ import {
   editSelectTime,
   editShowTime,
   inputSpikeChange,
+  inputTwitterHash,
   saveChart,
   selectTime,
   setupChartBot,
+  showSubscription,
   showTime,
 } from "bot/library/chart";
 import {
@@ -254,6 +256,9 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "deleteadvertise":
       await deleteAdvertise(msg);
       break;
+    case "twittersubscription":
+      await showSubscription(msg);
+      break;
     default:
       break;
   }
@@ -264,6 +269,18 @@ export const callBackHandler = async (msg: any, _action: string) => {
       break;
     case "paySOL":
       await inputHash(msg, "SOL", Number(payAction[1]));
+      break;
+    case "payTwitterPEKE":
+      await inputTwitterHash(msg, "PEKE", Number(payAction[1]), false);
+      break;
+    case "payTwitterSOL":
+      await inputTwitterHash(msg, "SOL", Number(payAction[1]), false);
+      break;
+    case "updateTwitterPEKE":
+      await inputTwitterHash(msg, "SOL", Number(payAction[1]), true);
+      break;
+    case "updateTwitterSOL":
+      await inputTwitterHash(msg, "SOL", Number(payAction[1]), true);
       break;
     default:
       break;

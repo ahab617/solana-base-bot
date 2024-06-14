@@ -75,6 +75,17 @@ const TokenCostSchema = new Schema({
   sol: Number,
 });
 
+const TwitterSchema = new Schema({
+  creator: String,
+  groupId: String,
+  appKey: String,
+  appSecret: String,
+  accessToken: String,
+  accessSecret: String,
+  hash: String,
+  expiredTime: Number,
+});
+
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
 export const SolTransactions = mongoose.model(
@@ -84,3 +95,4 @@ export const SolTransactions = mongoose.model(
 export const Charts = mongoose.model("charts", ChartSchema);
 export const AdSettings = mongoose.model("adsettings", AdSettingSchema);
 export const TokenCosts = mongoose.model("tokencosts", TokenCostSchema);
+export const Twitters = mongoose.model("twitters", TwitterSchema);

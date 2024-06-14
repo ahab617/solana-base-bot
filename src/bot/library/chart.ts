@@ -1,12 +1,25 @@
 import { answerCallbacks } from "bot";
 import { sendMessage } from ".";
 import { startBuyHandler } from "blockchain/monitor/library";
-import { ChartController } from "controller";
-import { formatAddress } from "utils/helper";
+import {
+  ChartController,
+  TokenCostController,
+  TwitterController,
+} from "controller";
+import {
+  currentTime,
+  formatAddress,
+  getRoundSolAmount,
+  getTimeDiff,
+} from "utils/helper";
 import { getPairInformation } from "blockchain/monitor/library/scan-api";
+import moment from "moment";
+import config from "config.json";
+import { checkSolTransaction } from "utils/blockchain";
 
 export let chartInfo = {} as any;
 export let editChartInfo = {} as any;
+export let twitterInfo = {} as any;
 
 export const showChartList = async (msg: any) => {
   const chatId = msg.chat.id;
@@ -38,7 +51,7 @@ export const showChartList = async (msg: any) => {
           [{ text: "➕ Setup Chart Bot", callback_data: "chartbotsetup" }],
           [
             {
-              text: "📱 Auto post to Twitter",
+              text: "📱 Premium (Auto post to Twitter)",
               callback_data: "twittersubscription",
             },
           ],
@@ -53,7 +66,7 @@ export const showChartList = async (msg: any) => {
           [{ text: "Setup Chart Bot", callback_data: "chartbotsetup" }],
           [
             {
-              text: "Auto post to Twitter",
+              text: "📱 Premium (Auto post to Twitter)",
               callback_data: "twittersubscription",
             },
           ],
@@ -704,5 +717,319 @@ export const deleteChart = async (msg: any) => {
       id: chatId,
       message: "<b>Please start from group.</b>",
     });
+  }
+};
+
+export const showSubscription = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = editChartInfo[chatId]?.groupId;
+  try {
+    if (groupId) {
+      const tokenCost = await TokenCostController.findOne({
+        filter: { creator: { $ne: "" } },
+      });
+      if (tokenCost && tokenCost?.peke && tokenCost?.sol) {
+        twitterInfo[chatId] = {
+          ...twitterInfo[chatId],
+          creator: chatId.toString(),
+          groupId: groupId,
+        };
+        const T = await TwitterController.findOne({
+          filter: { groupId: groupId.toString },
+        });
+
+        if (T) {
+          await sendMessage({
+            id: chatId,
+            message: `<b>You already subscribed premium. It will be expired at ${moment(
+              T.expiredTime * 1000
+            ).format("MMM Do YYYY - HH:mm:ss")}</b>`,
+            keyboards: [
+              [{ text: "🔄 Update premium", callback_data: "updatepremium" }],
+            ],
+          });
+        } else {
+          await sendMessage({
+            id: chatId,
+            message:
+              "<b>Please input App Key from your Twitter Developer Portal.</b>",
+          });
+          await inputAppKey(msg);
+        }
+      } else {
+        await sendMessage({
+          id: chatId,
+          message: "<b>Bot owner didn't set price yet.</b>",
+        });
+      }
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please start from group.</b>",
+      });
+    }
+  } catch (err) {
+    console.log("Error: ", err);
+  }
+};
+
+const inputAppKey = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = twitterInfo[chatId]?.groupId;
+  try {
+    if (groupId) {
+      answerCallbacks[chatId] = async function (answer: any) {
+        const appKey = answer.text;
+        twitterInfo[chatId] = {
+          ...twitterInfo[chatId],
+          appKey: appKey,
+        };
+        await sendMessage({
+          id: chatId,
+          message:
+            "<b>Please input App Secret from your Twitter Developer Portal.</b>",
+        });
+        await inputAppSecret(msg);
+      };
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please start from group.</b>",
+      });
+    }
+  } catch (err) {
+    console.log("Error: ", err);
+  }
+};
+
+const inputAppSecret = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = twitterInfo[chatId]?.groupId;
+  try {
+    if (groupId) {
+      answerCallbacks[chatId] = async function (answer: any) {
+        const appSecret = answer.text;
+        twitterInfo[chatId] = {
+          ...twitterInfo[chatId],
+          appSecret: appSecret,
+        };
+        await sendMessage({
+          id: chatId,
+          message:
+            "<b>Please input Access Token from your Twitter Developer Portal. Please notice that you have to provided Read/Write available token.</b>",
+        });
+        await inputAccessToken(msg);
+      };
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please start from group.</b>",
+      });
+    }
+  } catch (err) {
+    console.log("Error: ", err);
+  }
+};
+
+const inputAccessToken = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = twitterInfo[chatId]?.groupId;
+  try {
+    if (groupId) {
+      answerCallbacks[chatId] = async function (answer: any) {
+        const accessToken = answer.text;
+        twitterInfo[chatId] = {
+          ...twitterInfo[chatId],
+          accessToken: accessToken,
+        };
+        await sendMessage({
+          id: chatId,
+          message:
+            "<b>Please input Access Token Secret from your Twitter Developer Portal. Please notice that you have to provided Read/Write available token.</b>",
+        });
+        await inputAccessTokenSecret(msg);
+      };
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please start from group.</b>",
+      });
+    }
+  } catch (err) {
+    console.log("Error: ", err);
+  }
+};
+
+const inputAccessTokenSecret = async (msg: any) => {
+  const chatId = msg.chat.id;
+  const groupId = twitterInfo[chatId]?.groupId;
+  try {
+    if (groupId) {
+      answerCallbacks[chatId] = async function (answer: any) {
+        const accessSecret = answer.text;
+        twitterInfo[chatId] = {
+          ...twitterInfo[chatId],
+          accessSecret: accessSecret,
+        };
+        const tokenCost = await TokenCostController.findOne({
+          filter: { creator: { $ne: "" } },
+        });
+
+        const peke = tokenCost.peke;
+        const sol = tokenCost.sol;
+        await sendMessage({
+          id: chatId,
+          message: "<b>Please choose token what you will pay.</b>",
+          keyboards: [
+            [
+              { text: `${peke} PEKE`, callback_data: `payTwitterPEKE:${peke}` },
+              { text: `${sol} SOL`, callback_data: `payTwitterSOL:${sol}` },
+            ],
+          ],
+        });
+      };
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please start from group.</b>",
+      });
+    }
+  } catch (err) {
+    console.log("Error: ", err);
+  }
+};
+
+export const inputTwitterHash = async (
+  msg: any,
+  type: string,
+  amount: number,
+  update: boolean
+) => {
+  const chatId = msg.chat.id;
+  const groupId = twitterInfo[chatId]?.groupId;
+  if (groupId) {
+    try {
+      await sendMessage({
+        id: chatId,
+        message: `<b>Please send ${amount} ${type} to <code>${config.ownerAddr}</code>
+And then please input transaction hash in 5 mins.</b>`,
+      });
+      answerCallbacks[chatId] = async function (answer: any) {
+        const hash = answer.text.replace("https://solscan.io/tx/", "");
+
+        await sendMessage({
+          id: chatId,
+          message: "<b>Checking transaction hash...</b>",
+        });
+
+        const isHash = await TwitterController.findOne({
+          filter: { hash: hash },
+        });
+
+        if (isHash) {
+          await sendMessage({
+            id: chatId,
+            message:
+              "<b>This transaction was already used before. Please use another transaction hash.</b>",
+          });
+          await inputTwitterHash(msg, type, amount, update);
+        } else {
+          var result;
+          if (type === "PEKE") {
+            result = await checkSolTransaction(
+              hash,
+              config.ownerAddr,
+              config.pekeAddress
+            );
+          } else {
+            result = await checkSolTransaction(hash, config.ownerAddr);
+          }
+
+          if (result) {
+            const camount = getRoundSolAmount(result.amount);
+            if (camount < amount) {
+              await sendMessage({
+                id: chatId,
+                message: "<b>Received payment is not enough.</b>",
+              });
+              await inputTwitterHash(msg, type, amount, update);
+            } else if (getTimeDiff(result.blockTime) > 5) {
+              await sendMessage({
+                id: chatId,
+                message: "<b>You didn't pay in 5 minutes.</b>",
+              });
+              await inputTwitterHash(msg, type, amount, update);
+            } else {
+              if (update) {
+                await TwitterController.update({
+                  filter: { groupId: groupId.toString() },
+                  update: { expiredTime: currentTime() },
+                });
+              } else {
+                const data: TwitterInterface = {
+                  creator: chatId.toString(),
+                  groupId: groupId.toString(),
+                  appKey: twitterInfo[chatId]?.appKey,
+                  appSecret: twitterInfo[chatId]?.appSecret,
+                  accessToken: twitterInfo[chatId]?.accessToken,
+                  accessSecret: twitterInfo[chatId]?.accessSecret,
+                  hash: hash,
+                  expiredTime: currentTime(),
+                };
+
+                await TwitterController.create(data);
+              }
+
+              await sendMessage({
+                id: chatId,
+                message:
+                  "<b>You subscribed premium successfully. You can track 25 token pairs and also can post on Twitter automatically.</b>",
+              });
+
+              delete twitterInfo[chatId];
+              await startBuyHandler();
+            }
+          } else {
+            await sendMessage({
+              id: chatId,
+              message:
+                "<b>Invalid hash. Please use another transaction hash</b>",
+            });
+            await inputTwitterHash(msg, type, amount, update);
+          }
+        }
+      };
+    } catch (err) {
+      console.log("Advertise Error");
+    }
+  } else {
+    await sendMessage({
+      id: chatId,
+      message: "<b>You can purchase advertise from only groups.</b>",
+    });
+  }
+};
+
+export const showToken = async (msg: any) => {
+  const chatId = msg.chat.id;
+  try {
+    const tokenCost = await TokenCostController.findOne({
+      filter: { creator: { $ne: "" } },
+    });
+
+    const peke = tokenCost.peke;
+    const sol = tokenCost.sol;
+    await sendMessage({
+      id: chatId,
+      message: "<b>Please choose token what you will pay.</b>",
+      keyboards: [
+        [
+          { text: `${peke} PEKE`, callback_data: `updateTwitterPEKE:${peke}` },
+          { text: `${sol} SOL`, callback_data: `updateTwitterSOL:${sol}` },
+        ],
+      ],
+    });
+  } catch (err) {
+    console.log("Error: ", err);
   }
 };
