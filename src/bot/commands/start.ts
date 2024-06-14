@@ -1,6 +1,6 @@
 import { sendMessage } from "bot/library";
 import { editInfo, showList } from "bot/library/token";
-import { chartInfo, setupChartBot } from "bot/library/chart";
+import { chartInfo, editChartInfo, showChartList } from "bot/library/chart";
 import { bot } from "bot";
 import { advertiseInfo, showAdvertise } from "bot/library/advertise";
 import {
@@ -58,10 +58,16 @@ export default new Commands(
 
       if (hasPermission) {
         if (setChart) {
-          chartInfo[chatId] = {
+          editChartInfo[chatId] = {
+            ...editChartInfo[chatId],
             groupId: groupId,
           };
-          await setupChartBot(msg);
+
+          chartInfo[chatId] = {
+            ...chartInfo[chatId],
+            groupId: groupId,
+          };
+          await showChartList(msg);
         } else if (setupAdvertisement) {
           setupAdvertisementSettings[chatId] = {
             ...setupAdvertisementSettings[chatId],
