@@ -48,8 +48,8 @@ export const generateID = () =>
 export const toDayTime = (time: number) => time - (time % 86400);
 
 export const getRoundSolAmount = (value: number) => {
-  const _amount = value / 1000000000;
-  const amount = Math.round(_amount * 10) / 10;
+  const factor = Math.pow(10, 9);
+  const amount = Math.round(value * factor) / factor;
   return amount as number;
 };
 
