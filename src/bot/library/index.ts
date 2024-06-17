@@ -139,8 +139,6 @@ export const postMessageForSpike = async (
       ],
       preview: false,
     });
-    if (ad) {
-    }
 
     const Twitter = await TwitterController.findOne({
       filter: { groupId: data.groupId.toString() },
@@ -281,6 +279,60 @@ Group: ${ad.link}\n
           console.log("Tweet Success", response);
         } catch (err) {
           console.log("Twitter post error", err);
+        }
+      }
+    } else {
+      if (ad) {
+        try {
+          const pair = await getPairInformation(ad.chain, ad.pairAddress);
+          let metadata;
+          if (ad.chain === "base") {
+            metadata = await getBaseTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+          } else {
+            metadata = await getSolanaTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+          }
+          const marketcap =
+            (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
+            10 ** Number(metadata?.decimals);
+          let content;
+          if (ad.package === "package1") {
+            content = "";
+          } else {
+            content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
+↪️ <b>Price $${pair?.pair?.priceUsd}</b>
+⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
+💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
+
+<b>Group: </b>${ad.link}
+📊 <a href="${pair?.pair?.url}">Chart</a> ${
+              ad.chain === "base"
+                ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
+                : `🪙 <a href='https://jup.ag/'>Buy</a>`
+            }`;
+          }
+          if (ad.mediaType === "image") {
+            await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
+              caption: `${ad.description}
+
+${content}`,
+              parse_mode: "HTML",
+            });
+          } else {
+            await bot.sendVideo(Number(ad.groupId), ad.mediaId, {
+              caption: `${ad.description}
+
+${content}`,
+              parse_mode: "HTML",
+            });
+          }
+        } catch (err) {
+          console.log(err);
+          console.log("postMessageForPriceSpike sending error");
+          return false;
         }
       }
     }

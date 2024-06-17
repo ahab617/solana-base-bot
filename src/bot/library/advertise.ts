@@ -423,7 +423,7 @@ And then please input transaction hash in 5 mins.</b>`,
               });
 
               if (admin) {
-                const transferAmount = result.amount * 0.7;
+                const transferAmount = Number(result.amount * 0.7);
                 if (type === "PEKE") {
                   const tx = await transferSplToken(
                     config.ownerPrivateKey,
