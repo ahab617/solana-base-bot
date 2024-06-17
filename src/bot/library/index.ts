@@ -6,6 +6,10 @@ import {
   getPairInformation,
   getSolanaTokenMetadata,
 } from "blockchain/monitor/library/scan-api";
+import { TwitterController } from "controller";
+import { TwitterApi } from "twitter-api-v2";
+import request from "request";
+import fs from "fs";
 
 export const sendMessage = async ({
   id,
@@ -74,7 +78,10 @@ ${emoji}
   }
 };
 
-export const postMessageForSpike = async (data: SpikeInterface) => {
+export const postMessageForSpike = async (
+  data: SpikeInterface,
+  ad?: AdInterface
+) => {
   try {
     let spike =
       data.spikeType === "priceuppercent" ||
@@ -132,6 +139,151 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
       ],
       preview: false,
     });
+    if (ad) {
+    }
+
+    const Twitter = await TwitterController.findOne({
+      filter: { groupId: data.groupId.toString() },
+    });
+
+    if (Twitter) {
+      const appKey = Twitter.appKey as string;
+      const appSecret = Twitter.appSecret as string;
+      const accessToken = Twitter.accessToken as string;
+      const accessSecret = Twitter.accessSecret as string;
+
+      const client = new TwitterApi({
+        appKey,
+        appSecret,
+        accessToken,
+        accessSecret,
+      });
+
+      const tweetText = `Charts by: ${config.ownerChannel}\n\n$${
+        data.spikeType === "priceuppercent"
+          ? "Increase Price"
+          : data.spikeType === "pricedownpercent"
+          ? "Decrease Price"
+          : data.spikeType === "buyamount"
+          ? "Buy"
+          : "Sell"
+      } Spike!$\n💲 $${data.symbol}\n↪️ ${
+        data.spikeType === "priceuppercent"
+          ? "Price went up"
+          : data.spikeType === "pricedownpercent"
+          ? "Price went down"
+          : data.spikeType === "buyamount"
+          ? "Lot of buying"
+          : "Lot of selling"
+      }\n💵 ${
+        data.spikeType === "priceuppercent" ||
+        data.spikeType === "pricedownpercent"
+          ? `${data.spike}%`
+          : `${spike}+`
+      }\n🕔 Within ${data.time}\n☑️ Market Cap $${numberWithCommas(
+        Number(data.marketcap)
+      )}\n\n📊 Chart: ${data.url}\n${
+        data.chain === "base"
+          ? "🦄 Buy: https://app.uniswap.org"
+          : "🪙 Buy: https://jup.ag"
+      }\n`;
+
+      if (ad) {
+        try {
+          const pair = await getPairInformation(ad.chain, ad.pairAddress);
+          let metadata;
+          if (ad.chain === "base") {
+            metadata = await getBaseTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+          } else {
+            metadata = await getSolanaTokenMetadata(
+              pair?.pair?.baseToken?.address
+            );
+          }
+          const marketcap =
+            (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
+            10 ** Number(metadata?.decimals);
+          let content;
+          if (ad.package === "package1") {
+            content = "";
+          } else {
+            content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
+↪️ <b>Price $${pair?.pair?.priceUsd}</b>
+⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
+💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
+
+<b>Group: </b>${ad.link}
+📊 <a href="${pair?.pair?.url}">Chart</a> ${
+              ad.chain === "base"
+                ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
+                : `🪙 <a href='https://jup.ag/'>Buy</a>`
+            }`;
+          }
+          if (ad.mediaType === "image") {
+            await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
+              caption: `${ad.description}
+
+${content}`,
+              parse_mode: "HTML",
+            });
+          } else {
+            await bot.sendVideo(Number(ad.groupId), ad.mediaId, {
+              caption: `${ad.description}
+
+${content}`,
+              parse_mode: "HTML",
+            });
+          }
+          const mediaId = ad.mediaId;
+          const file = await bot.getFile(mediaId);
+          const filePath = `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`;
+          const fileName =
+            ad.mediaType === "image" ? `${mediaId}.jpg` : `${mediaId}.mp4`;
+          try {
+            await downloadFile(filePath, fileName);
+            const media = await client.v1.uploadMedia(fileName);
+            const mediaIds = media ? [media] : [];
+            let adText;
+            if (ad.package === "package1") {
+              adText = ad.description;
+            } else {
+              adText = `${ad.description}\n\n💲 $${
+                pair?.pair?.baseToken?.symbol
+              }\n↪️ Price $${pair?.pair?.priceUsd}\n⬆️ Volume 24H: $${
+                pair?.pair?.volume?.h24
+              }\n💰 Market Cap $${numberWithCommas(Number(marketcap), 3)}\n\n
+
+Group: ${ad.link}\n
+📊 Chart: ${pair?.pair?.url}\n${
+                ad.chain === "base"
+                  ? `🦄 Buy: https://app.uniswap.org`
+                  : `🪙 Buy: https://jup.ag`
+              }`;
+            }
+            const fText = `${tweetText}\n\n${adText}`;
+            const response = await client.v2.tweet({
+              text: fText,
+              media: { media_ids: mediaIds },
+            });
+            console.log("Tweet Success", response);
+          } catch (err) {
+            console.log(err);
+          }
+        } catch (err) {
+          console.log(err);
+          console.log("postMessageForPriceSpike sending error");
+          return false;
+        }
+      } else {
+        try {
+          const response = await client.v2.tweet({ text: tweetText });
+          console.log("Tweet Success", response);
+        } catch (err) {
+          console.log("Twitter post error", err);
+        }
+      }
+    }
   } catch (err) {
     console.log(err);
     console.log("postMessageForPriceSpike sending error");
@@ -139,52 +291,11 @@ export const postMessageForSpike = async (data: SpikeInterface) => {
   }
 };
 
-export const postMessageForAdvertise = async (ad: AdInterface) => {
-  try {
-    const pair = await getPairInformation(ad.chain, ad.pairAddress);
-    let metadata;
-    if (ad.chain === "base") {
-      metadata = await getBaseTokenMetadata(pair?.pair?.baseToken?.address);
-    } else {
-      metadata = await getSolanaTokenMetadata(pair?.pair?.baseToken?.address);
-    }
-    const marketcap =
-      (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
-      10 ** Number(metadata?.decimals);
-    let content;
-    if (ad.package === "package1") {
-      content = "";
-    } else {
-      content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
-↪️ <b>Price $${pair?.pair?.priceUsd}</b>
-⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
-💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
-
-<b>Group: </b>${ad.link}
-📊 <a href="${pair?.pair?.url}">Chart</a> ${
-        ad.chain === "base"
-          ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
-          : `🪙 <a href='https://jup.ag/'>Buy</a>`
-      }`;
-    }
-    if (ad.mediaType === "image") {
-      await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
-        caption: `${ad.description}
-
-${content}`,
-        parse_mode: "HTML",
-      });
-    } else {
-      await bot.sendVideo(Number(ad.groupId), ad.mediaId, {
-        caption: `${ad.description}
-
-${content}`,
-        parse_mode: "HTML",
-      });
-    }
-  } catch (err) {
-    console.log(err);
-    console.log("postMessageForPriceSpike sending error");
-    return false;
-  }
+const downloadFile = async (url: string, filename: string) => {
+  return new Promise((resolve, reject) => {
+    request.head(url, (err, res, body) => {
+      if (err) reject(err);
+      request(url).pipe(fs.createWriteStream(filename)).on("close", resolve);
+    });
+  });
 };

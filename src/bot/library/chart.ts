@@ -982,7 +982,7 @@ And then please input transaction hash in 5 mins.</b>`,
               if (update) {
                 await TwitterController.update({
                   filter: { groupId: groupId.toString() },
-                  update: { expiredTime: currentTime() },
+                  update: { expiredTime: currentTime() + 24 * 60 * 60 * 30 },
                 });
               } else {
                 const data: TwitterInterface = {
@@ -993,7 +993,7 @@ And then please input transaction hash in 5 mins.</b>`,
                   accessToken: twitterInfo[chatId]?.accessToken,
                   accessSecret: twitterInfo[chatId]?.accessSecret,
                   hash: hash,
-                  expiredTime: currentTime(),
+                  expiredTime: currentTime() + 24 * 60 * 60 * 30,
                 };
 
                 await TwitterController.create(data);

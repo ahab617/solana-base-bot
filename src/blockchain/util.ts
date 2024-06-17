@@ -10,7 +10,6 @@ import {
   getSolanaTokenMetadata,
 } from "./monitor/library/scan-api";
 import {
-  postMessageForAdvertise,
   postMessageForSpike,
   postMessageWithMedia,
   sendMessage,
@@ -398,8 +397,33 @@ export const chartHandleEvent = async (props: any) => {
         url: pair?.pair?.url,
         marketcap: mcap,
       };
-      await postMessageForSpike(data);
-      await showAdMessage();
+      const ads = await AdController.find({
+        filter: { groupId: chartInfo.groupId },
+      });
+      if (ads.length > 0) {
+        const randIdx = Math.floor(Math.random() * ads.length);
+        const ad = ads[randIdx] as AdInterface;
+        if (ad.count < 2) {
+          await postMessageForSpike(data, ad);
+          await sendMessage({
+            id: Number(ad.creator),
+            message: "<b>Your advertise was just expired.</b>",
+          });
+          await AdController.deleteOne({
+            filter: { creator: ad.creator, groupId: ad.groupId },
+          });
+        } else {
+          await postMessageForSpike(data, ad);
+          await AdController.update({
+            filter: { creator: ad.creator, groupId: ad.groupId },
+            update: {
+              count: ad.count - 1,
+            },
+          });
+        }
+      } else {
+        await postMessageForSpike(data);
+      }
     } catch (err) {
       console.log(err);
     }
@@ -465,8 +489,33 @@ export const chartHandleEvent = async (props: any) => {
               url: pair?.pair?.url,
               marketcap: mcap,
             };
-            await postMessageForSpike(data);
-            await showAdMessage();
+            const ads = await AdController.find({
+              filter: { groupId: chartInfo.groupId },
+            });
+            if (ads.length > 0) {
+              const randIdx = Math.floor(Math.random() * ads.length);
+              const ad = ads[randIdx] as AdInterface;
+              if (ad.count < 2) {
+                await postMessageForSpike(data, ad);
+                await sendMessage({
+                  id: Number(ad.creator),
+                  message: "<b>Your advertise was just expired.</b>",
+                });
+                await AdController.deleteOne({
+                  filter: { creator: ad.creator, groupId: ad.groupId },
+                });
+              } else {
+                await postMessageForSpike(data, ad);
+                await AdController.update({
+                  filter: { creator: ad.creator, groupId: ad.groupId },
+                  update: {
+                    count: ad.count - 1,
+                  },
+                });
+              }
+            } else {
+              await postMessageForSpike(data);
+            }
           } catch (err) {
             console.log(err);
           }
@@ -537,8 +586,33 @@ export const chartHandleEvent = async (props: any) => {
               url: pair?.pair?.url,
               marketcap: mcap,
             };
-            await postMessageForSpike(data);
-            await showAdMessage();
+            const ads = await AdController.find({
+              filter: { groupId: chartInfo.groupId },
+            });
+            if (ads.length > 0) {
+              const randIdx = Math.floor(Math.random() * ads.length);
+              const ad = ads[randIdx] as AdInterface;
+              if (ad.count < 2) {
+                await postMessageForSpike(data, ad);
+                await sendMessage({
+                  id: Number(ad.creator),
+                  message: "<b>Your advertise was just expired.</b>",
+                });
+                await AdController.deleteOne({
+                  filter: { creator: ad.creator, groupId: ad.groupId },
+                });
+              } else {
+                await postMessageForSpike(data, ad);
+                await AdController.update({
+                  filter: { creator: ad.creator, groupId: ad.groupId },
+                  update: {
+                    count: ad.count - 1,
+                  },
+                });
+              }
+            } else {
+              await postMessageForSpike(data);
+            }
           } catch (err) {
             console.log(err);
           }
@@ -546,34 +620,6 @@ export const chartHandleEvent = async (props: any) => {
       });
     } catch (err) {
       console.log("Base chain spike error");
-    }
-  };
-
-  const showAdMessage = async () => {
-    const ads = await AdController.find({
-      filter: { groupId: chartInfo.groupId },
-    });
-    if (ads.length > 0) {
-      const randIdx = Math.floor(Math.random() * ads.length);
-      const ad = ads[randIdx] as AdInterface;
-      if (ad.count < 2) {
-        await postMessageForAdvertise(ad);
-        await sendMessage({
-          id: Number(ad.creator),
-          message: "<b>Your advertise was just expired.</b>",
-        });
-        await AdController.deleteOne({
-          filter: { creator: ad.creator, groupId: ad.groupId },
-        });
-      } else {
-        await postMessageForAdvertise(ad);
-        await AdController.update({
-          filter: { creator: ad.creator, groupId: ad.groupId },
-          update: {
-            count: ad.count - 1,
-          },
-        });
-      }
     }
   };
 

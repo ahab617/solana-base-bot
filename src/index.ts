@@ -3,7 +3,10 @@ import cors from "cors";
 import mongoose from "mongoose";
 import config from "config.json";
 import { initBot } from "./bot/index";
-import { startBuyHandler } from "blockchain/monitor/library";
+import {
+  startBuyHandler,
+  subscriptionHandler,
+} from "blockchain/monitor/library";
 import Moralis from "moralis";
 
 const app: express.Express = express();
@@ -20,6 +23,7 @@ const connectDatabase = async (mongoUrl: string) => {
       console.log("MongoDB connected");
       await Moralis.start({ apiKey: config.baseAPIKey });
       await initBot();
+      await subscriptionHandler();
       await startBuyHandler();
     }
   } catch (err) {

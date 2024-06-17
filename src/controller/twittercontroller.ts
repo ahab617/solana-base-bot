@@ -15,6 +15,12 @@ const findOne = async (props: any) => {
   return result;
 };
 
+const find = async (props: any) => {
+  const { filter } = props;
+  const result = await Twitters.find(filter);
+  return result;
+};
+
 const update = async (props: any) => {
   const { filter, update } = props;
   const result = await Twitters.findOneAndUpdate(filter, update);
@@ -30,6 +36,7 @@ const deleteOne = async (props: any) => {
 export default {
   create,
   findOne,
+  find,
   update,
   deleteOne,
 };

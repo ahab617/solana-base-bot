@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import levels from "level.json";
 
 export const md5 = (plain: string) =>
   crypto.createHash("md5").update(plain).digest("hex");
@@ -47,13 +46,6 @@ export const generateID = () =>
   Math.round(new Date().getTime() / 1000 + Math.random() * 5001221051);
 
 export const toDayTime = (time: number) => time - (time % 86400);
-
-export const getDuration = (_duration: number) => {
-  const item = Object.values(levels).find((a) => a.day == _duration);
-  const amount = item?.value || 10000;
-  const duration = item.label;
-  return { duration: duration, amount: amount as number };
-};
 
 export const getRoundSolAmount = (value: number) => {
   const _amount = value / 1000000000;
