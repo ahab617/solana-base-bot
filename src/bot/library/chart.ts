@@ -1,6 +1,9 @@
 import { answerCallbacks } from "bot";
 import { sendMessage } from ".";
-import { startBuyHandler } from "blockchain/monitor/library";
+import {
+  startBuyHandler,
+  subscriptionHandler,
+} from "blockchain/monitor/library";
 import {
   ChartController,
   TokenCostController,
@@ -984,6 +987,7 @@ And then please input transaction hash in 5 mins.</b>`,
                   filter: { groupId: groupId.toString() },
                   update: { expiredTime: currentTime() + 24 * 60 * 60 * 30 },
                 });
+                await subscriptionHandler();
               } else {
                 const data: TwitterInterface = {
                   creator: chatId.toString(),
@@ -997,6 +1001,7 @@ And then please input transaction hash in 5 mins.</b>`,
                 };
 
                 await TwitterController.create(data);
+                await subscriptionHandler();
               }
 
               await sendMessage({

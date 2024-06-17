@@ -7,9 +7,6 @@ files
 # misc
 .env
 .env.*
-config.json
-config.*.json
-config.js
 config.example.json
 public
 

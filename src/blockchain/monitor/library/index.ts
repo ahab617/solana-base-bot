@@ -108,9 +108,11 @@ const subscriptionHandler = async () => {
 
   const handleEvent = async () => {
     try {
-      cron.schedule("0 0 * * *", async () => {
+      const schedule = cron.schedule("0 0 * * *", async () => {
         await handleSubscription();
       });
+      schedule.stop();
+      schedule.start();
     } catch (err) {
       console.log(err);
     }

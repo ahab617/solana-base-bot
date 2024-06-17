@@ -88,12 +88,15 @@ export const baseHandleEvent = async (props: any) => {
         });
       }
       latestblocknumber = blockNumber;
-      cron.schedule(`*/${times} * * * * *`, () => {
+      const schedule = cron.schedule(`*/${times} * * * * *`, () => {
         console.log(
           `running a base transaction ${token.pairAddress} handle every ${times} second`
         );
         handletransactions();
       });
+
+      schedule.stop();
+      schedule.start();
     } catch (err: any) {
       console.log(
         `running a base transaction ${token.pairAddress} handle error ${err.message}`
@@ -245,12 +248,14 @@ export const solanaHandleEvent = async (props: any) => {
 
   const handleEvent = async () => {
     try {
-      cron.schedule(`*/${times} * * * * *`, () => {
+      const schedule = cron.schedule(`*/${times} * * * * *`, () => {
         console.log(
           `running a solana transaction ${token.pairAddress} handle every ${times} second`
         );
         solanaHandleTransactions();
       });
+      schedule.stop();
+      schedule.start();
     } catch (err: any) {
       console.log(
         `running a solana transaction ${token.pairAddress} handle error ${err.message}`
@@ -625,12 +630,14 @@ export const chartHandleEvent = async (props: any) => {
 
   const handleTokenPairEvent = async () => {
     try {
-      cron.schedule(`*/${times} * * * * `, () => {
+      const schedule = cron.schedule(`*/${times} * * * * `, () => {
         console.log(
           `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
         );
         handleTokenPair();
       });
+      schedule.stop();
+      schedule.start();
     } catch (err: any) {
       console.log(
         `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle error ${err.message}`
