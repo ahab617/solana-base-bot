@@ -13,6 +13,7 @@ import cron from "node-cron";
 
 let tokens: TokenInterface[] = [];
 let charts: ChartInterface[] = [];
+export let cronjobs: any[] = [];
 
 const updatePairAddresses = async () => {
   try {
@@ -67,7 +68,12 @@ const chartEventHandler = async () => {
 const startBuyHandler = async () => {
   tokens = [];
   charts = [];
-  buyEventHandler;
+
+  if (cronjobs.length > 0) {
+    for (let i = 0; i < cronjobs.length; i++) {
+      await cronjobs[i].stop();
+    }
+  }
 
   await updatePairAddresses();
   await updateChartInfos();
@@ -108,11 +114,11 @@ const subscriptionHandler = async () => {
 
   const handleEvent = async () => {
     try {
-      const schedule = cron.schedule("0 0 * * *", async () => {
-        await handleSubscription();
-      });
-      schedule.stop();
-      schedule.start();
+      cronjobs.push(
+        cron.schedule("0 0 * * *", async () => {
+          await handleSubscription();
+        })
+      );
     } catch (err) {
       console.log(err);
     }

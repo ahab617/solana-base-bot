@@ -15,6 +15,7 @@ import {
   sendMessage,
 } from "bot/library";
 import { AdController, SolController } from "controller";
+import { cronjobs } from "./monitor/library";
 
 export const baseHandleEvent = async (props: any) => {
   const {
@@ -88,15 +89,14 @@ export const baseHandleEvent = async (props: any) => {
         });
       }
       latestblocknumber = blockNumber;
-      const schedule = cron.schedule(`*/${times} * * * * *`, () => {
-        console.log(
-          `running a base transaction ${token.pairAddress} handle every ${times} second`
-        );
-        handletransactions();
-      });
-
-      schedule.stop();
-      schedule.start();
+      cronjobs.push(
+        cron.schedule(`*/${times} * * * * *`, () => {
+          console.log(
+            `running a base transaction ${token.pairAddress} handle every ${times} second`
+          );
+          handletransactions();
+        })
+      );
     } catch (err: any) {
       console.log(
         `running a base transaction ${token.pairAddress} handle error ${err.message}`
@@ -248,14 +248,14 @@ export const solanaHandleEvent = async (props: any) => {
 
   const handleEvent = async () => {
     try {
-      const schedule = cron.schedule(`*/${times} * * * * *`, () => {
-        console.log(
-          `running a solana transaction ${token.pairAddress} handle every ${times} second`
-        );
-        solanaHandleTransactions();
-      });
-      schedule.stop();
-      schedule.start();
+      cronjobs.push(
+        cron.schedule(`*/${times} * * * * *`, () => {
+          console.log(
+            `running a solana transaction ${token.pairAddress} handle every ${times} second`
+          );
+          solanaHandleTransactions();
+        })
+      );
     } catch (err: any) {
       console.log(
         `running a solana transaction ${token.pairAddress} handle error ${err.message}`
@@ -630,14 +630,14 @@ export const chartHandleEvent = async (props: any) => {
 
   const handleTokenPairEvent = async () => {
     try {
-      const schedule = cron.schedule(`*/${times} * * * * `, () => {
-        console.log(
-          `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
-        );
-        handleTokenPair();
-      });
-      schedule.stop();
-      schedule.start();
+      cronjobs.push(
+        cron.schedule(`*/${times} * * * * `, () => {
+          console.log(
+            `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle every ${times} minutes`
+          );
+          handleTokenPair();
+        })
+      );
     } catch (err: any) {
       console.log(
         `running a ${chartInfo.chain} chart token pair ${chartInfo.pairAddress} handle error ${err.message}`
