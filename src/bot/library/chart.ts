@@ -963,6 +963,7 @@ And then please input transaction hash in 5 mins.</b>`,
               config.ownerAddr,
               config.pekeAddress
             );
+            console.log("🚀 ~ result:", result);
           } else {
             result = await checkSolTransaction(hash, config.ownerAddr);
           }
