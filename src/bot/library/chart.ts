@@ -970,6 +970,7 @@ And then please input transaction hash in 5 mins.</b>`,
 
           if (result) {
             const camount = getRoundSolAmount(result.amount);
+            console.log("result.amount", result.amount);
             console.log("🚀 ~ camount:", camount);
             console.log("🚀 ~ amount:", amount);
             if (Number(camount) < Number(amount)) {
