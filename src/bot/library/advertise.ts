@@ -382,7 +382,10 @@ And then please input transaction hash in 5 mins.</b>`,
 
           if (result) {
             const camount = getRoundSolAmount(result.amount);
-            if (camount < amount) {
+            console.log("🚀 ~ camount:", camount);
+            console.log("🚀 ~ amount:", amount);
+
+            if (Number(camount) < Number(amount)) {
               await sendMessage({
                 id: chatId,
                 message: "<b>Received payment is not enough.</b>",
