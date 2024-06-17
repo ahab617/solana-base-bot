@@ -129,7 +129,7 @@ export const initializeConnection = () => {
   const rpcUrl: string = "https://solana-mainnet.core.chainstack.com/"; //solana rpc
   const connection = new Connection(rpcUrl, {
     commitment: "confirmed",
-    wsEndpoint: process.env.SOLANA_WSS,
+    wsEndpoint: "wss://solana.drpc.org",
   });
   // Redacting part of the RPC URL for security/log clarity
   console.log(`Initialized Connection to Solana RPC: ${rpcUrl.slice(0, -32)}`);
@@ -143,7 +143,7 @@ export const transferSplToken = async (
   amount: number
 ) => {
   const fromWallet = await getKeyPairFromPrivatekey(privatekey);
-  // const connection = initializeConnection();
+  const connection = initializeConnection();
   const destPublicKey = new PublicKey(dis);
   const mintPublicKey = new web3.PublicKey(tokenAddr);
   const decimals = await getNumberDecimals(mintPublicKey, connection);
