@@ -9,21 +9,6 @@ export const showPackages = async (msg: any) => {
   const chatId = msg.chat.id;
   const groupId = setupAdvertisementSettings[chatId]?.groupId;
 
-  const adsetting = await AdsettingController.findOne({
-    filter: { groupId: groupId.toString() },
-  });
-
-  if (adsetting) {
-    setupAdvertisementSettings[chatId] = {
-      ...setupAdvertisementSettings[chatId],
-      address: adsetting?.address,
-      package1: adsetting?.package1,
-      package2: adsetting?.package2,
-      package3: adsetting?.package3,
-      package4: adsetting?.package4,
-    };
-  }
-
   if (groupId) {
     await sendMessage({
       id: chatId,

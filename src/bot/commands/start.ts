@@ -7,6 +7,7 @@ import {
   setupAdvertisementSettings,
   showPackages,
 } from "bot/library/setupadvertisement";
+import { AdSettingController } from "controller";
 
 const { Commands } = require("../index.ts");
 
@@ -73,6 +74,20 @@ export default new Commands(
             ...setupAdvertisementSettings[chatId],
             groupId: groupId,
           };
+          const adsetting = await AdSettingController.findOne({
+            filter: { groupId: groupId.toString() },
+          });
+
+          if (adsetting) {
+            setupAdvertisementSettings[chatId] = {
+              ...setupAdvertisementSettings[chatId],
+              address: adsetting?.address,
+              package1: adsetting?.package1,
+              package2: adsetting?.package2,
+              package3: adsetting?.package3,
+              package4: adsetting?.package4,
+            };
+          }
           await showPackages(msg);
         } else if (!setAd) {
           await showList(msg);

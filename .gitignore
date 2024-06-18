@@ -7,8 +7,11 @@ files
 # misc
 .env
 .env.*
-config.example.json
 config.json
+config.*.json
+config.js
+config.example.json
+config.json.defaults
 public
 
 npm-debug.log*
