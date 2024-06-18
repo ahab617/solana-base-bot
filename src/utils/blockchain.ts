@@ -171,6 +171,7 @@ export const checkSolTransaction = async (
   toAddress: string,
   tokenAddr?: string
 ) => {
+  console.log(hash, toAddress);
   try {
     if (!hash) return null;
     const response = await axios({
@@ -188,6 +189,7 @@ export const checkSolTransaction = async (
     });
     const result = response?.data?.[0]?.result;
     if (!result) return null;
+    console.log("Result:", result);
     const postBalance = result?.meta?.postBalances || [];
     const preBalances = result?.meta?.preBalances || [];
     const postTokenBalances = result?.meta?.postTokenBalances || [];
