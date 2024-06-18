@@ -201,6 +201,7 @@ export const checkSolTransaction = async (
       postTokenBalances?.length > 0 &&
       preTokenBalances?.length > 0
     ) {
+      console.log("tokenAddr", tokenAddr);
       const decimals = postTokenBalances?.[1]?.uiTokenAmount?.decimals || 9;
       const postAmount = postTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
       const preAmount = preTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
@@ -213,6 +214,7 @@ export const checkSolTransaction = async (
       ) {
         const val = Number(postAmount) - Number(preAmount);
         const amount = formatUnit(val, decimals);
+        console.log("val, amount", val, amount);
         return {
           blockTime: result?.blockTime,
           amount: Number(amount),
