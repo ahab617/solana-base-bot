@@ -171,70 +171,74 @@ export const checkSolTransaction = async (
   toAddress: string,
   tokenAddr?: string
 ) => {
-  if (!hash) return null;
-  const response = await axios({
-    url: `https://api.mainnet-beta.solana.com`,
-    method: "post",
-    headers: { "Content-Type": "application/json" },
-    data: [
-      {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getTransaction",
-        params: [hash, "json"],
-      },
-    ],
-  });
-  const result = response?.data?.[0]?.result;
-  if (!result) return null;
-  const postBalance = result?.meta?.postBalances || [];
-  const preBalances = result?.meta?.preBalances || [];
-  const postTokenBalances = result?.meta?.postTokenBalances || [];
-  const preTokenBalances = result?.meta?.preTokenBalances || [];
+  try {
+    if (!hash) return null;
+    const response = await axios({
+      url: `https://api.mainnet-beta.solana.com`,
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      data: [
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getTransaction",
+          params: [hash, "json"],
+        },
+      ],
+    });
+    const result = response?.data?.[0]?.result;
+    if (!result) return null;
+    const postBalance = result?.meta?.postBalances || [];
+    const preBalances = result?.meta?.preBalances || [];
+    const postTokenBalances = result?.meta?.postTokenBalances || [];
+    const preTokenBalances = result?.meta?.preTokenBalances || [];
 
-  ///token transfer
-  if (
-    tokenAddr &&
-    postTokenBalances?.length > 0 &&
-    preTokenBalances?.length > 0
-  ) {
-    const decimals = postTokenBalances?.[1]?.uiTokenAmount?.decimals || 9;
-    const postAmount = postTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
-    const preAmount = preTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
-    const mintAddr = postTokenBalances?.[1]?.mint || "";
-    const receiver = postTokenBalances?.[1]?.owner || "";
-
+    ///token transfer
     if (
-      receiver.toUpperCase() == toAddress.toUpperCase() &&
-      mintAddr.toUpperCase() == tokenAddr.toUpperCase()
+      tokenAddr &&
+      postTokenBalances?.length > 0 &&
+      preTokenBalances?.length > 0
     ) {
+      const decimals = postTokenBalances?.[1]?.uiTokenAmount?.decimals || 9;
+      const postAmount = postTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
+      const preAmount = preTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
+      const mintAddr = postTokenBalances?.[1]?.mint || "";
+      const receiver = postTokenBalances?.[1]?.owner || "";
+
+      if (
+        receiver.toUpperCase() == toAddress.toUpperCase() &&
+        mintAddr.toUpperCase() == tokenAddr.toUpperCase()
+      ) {
+        const val = Number(postAmount) - Number(preAmount);
+        const amount = formatUnit(val, decimals);
+        return {
+          blockTime: result?.blockTime,
+          amount: Number(amount),
+          decimals: decimals,
+          tokenAddress: mintAddr,
+        };
+      }
+    }
+    ///sol transfer
+    else {
+      const decimals = 9;
+      const postAmount = postBalance?.[1] || 0;
+      const preAmount = preBalances?.[1] || 0;
       const val = Number(postAmount) - Number(preAmount);
       const amount = formatUnit(val, decimals);
-      return {
-        blockTime: result?.blockTime,
-        amount: Number(amount),
-        decimals: decimals,
-        tokenAddress: mintAddr,
-      };
+      const keys = result?.transaction?.message?.accountKeys || [];
+      const to = keys[1];
+      if (to.toUpperCase() == toAddress.toUpperCase()) {
+        return {
+          blockTime: result?.blockTime,
+          amount: Number(amount),
+          decimals: decimals,
+          tokenAddress: "",
+        };
+      }
     }
+    return null;
+  } catch (err) {
+    console.log(err);
   }
-  ///sol transfer
-  else {
-    const decimals = 9;
-    const postAmount = postBalance?.[1] || 0;
-    const preAmount = preBalances?.[1] || 0;
-    const val = Number(postAmount) - Number(preAmount);
-    const amount = formatUnit(val, decimals);
-    const keys = result?.transaction?.message?.accountKeys || [];
-    const to = keys[1];
-    if (to.toUpperCase() == toAddress.toUpperCase()) {
-      return {
-        blockTime: result?.blockTime,
-        amount: Number(amount),
-        decimals: decimals,
-        tokenAddress: "",
-      };
-    }
-  }
-  return null;
 };
