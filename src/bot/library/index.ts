@@ -90,7 +90,7 @@ export const postMessageForSpike = async (
         : numberWithCommas(Math.trunc(data.spike));
     await sendMessage({
       id: Number(data.groupId),
-      message: `Charts by: ${config.ownerChannel}
+      message: `<b>Charts by: ${config.ownerChannel}</b>
 
 <b>$${
         data.spikeType === "priceuppercent"
@@ -220,14 +220,18 @@ export const postMessageForSpike = async (
           }
           if (ad.mediaType === "image") {
             await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
-              caption: `${ad.description}
+              caption: `<b>Sponsored Post</b>
+              
+${ad.description}
 
 ${content}`,
               parse_mode: "HTML",
             });
           } else {
             await bot.sendVideo(Number(ad.groupId), ad.mediaId, {
-              caption: `${ad.description}
+              caption: `<b>Sponsored Post</b>
+              
+${ad.description}
 
 ${content}`,
               parse_mode: "HTML",
@@ -316,14 +320,18 @@ Group: ${ad.link}\n
           }
           if (ad.mediaType === "image") {
             await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
-              caption: `${ad.description}
+              caption: `<b>Sponsored Post</b>
+
+${ad.description}
 
 ${content}`,
               parse_mode: "HTML",
             });
           } else {
             await bot.sendVideo(Number(ad.groupId), ad.mediaId, {
-              caption: `${ad.description}
+              caption: `<b>Sponsored Post</b>
+              
+${ad.description}
 
 ${content}`,
               parse_mode: "HTML",

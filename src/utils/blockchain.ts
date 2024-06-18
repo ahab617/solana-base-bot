@@ -15,7 +15,7 @@ import { formatUnit } from "./bigmath";
 
 const connection = new Web3.Connection(Web3.clusterApiUrl("mainnet-beta"), {
   commitment: "confirmed",
-});
+}) as any;
 
 export const generateSolanaWallet = async () => {
   const signer = Web3.Keypair.generate();
@@ -125,52 +125,45 @@ async function getNumberDecimals(
   return decimals;
 }
 
-export const initializeConnection = () => {
-  const rpcUrl: string = "https://solana-mainnet.core.chainstack.com/"; //solana rpc
-  const connection = new Connection(rpcUrl, {
-    commitment: "confirmed",
-    wsEndpoint: "wss://solana.drpc.org",
-  });
-  // Redacting part of the RPC URL for security/log clarity
-  console.log(`Initialized Connection to Solana RPC: ${rpcUrl.slice(0, -32)}`);
-  return connection;
-};
-
 export const transferSplToken = async (
   privatekey: string,
   tokenAddr: string,
   dis: string,
   amount: number
 ) => {
-  const fromWallet = await getKeyPairFromPrivatekey(privatekey);
-  const connection = initializeConnection();
-  const destPublicKey = new PublicKey(dis);
-  const mintPublicKey = new web3.PublicKey(tokenAddr);
-  const decimals = await getNumberDecimals(mintPublicKey, connection);
+  try {
+    const fromWallet = await getKeyPairFromPrivatekey(privatekey);
+    const destPublicKey = new PublicKey(dis);
+    const mintPublicKey = new web3.PublicKey(tokenAddr);
+    const decimals = await getNumberDecimals(mintPublicKey, connection);
 
-  const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
-    connection,
-    fromWallet,
-    mintPublicKey,
-    fromWallet.publicKey
-  );
+    const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      fromWallet,
+      mintPublicKey,
+      fromWallet.publicKey
+    );
 
-  const receiverTokenAccount = await getOrCreateAssociatedTokenAccount(
-    connection,
-    fromWallet,
-    mintPublicKey,
-    destPublicKey
-  );
+    const receiverTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      fromWallet,
+      mintPublicKey,
+      destPublicKey
+    );
 
-  const tx = await transfer(
-    connection,
-    fromWallet,
-    senderTokenAccount.address,
-    receiverTokenAccount.address,
-    fromWallet.publicKey,
-    amount * 10 ** decimals
-  );
-  return tx;
+    const tx = await transfer(
+      connection,
+      fromWallet,
+      senderTokenAccount.address,
+      receiverTokenAccount.address,
+      fromWallet.publicKey,
+      amount * 10 ** decimals
+    );
+    return tx;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
 };
 
 export const checkSolTransaction = async (
