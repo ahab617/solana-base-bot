@@ -8,6 +8,7 @@ files
 .env
 .env.*
 config.example.json
+config.json
 public
 
 npm-debug.log*
