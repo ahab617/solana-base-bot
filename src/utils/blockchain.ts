@@ -207,7 +207,7 @@ export const checkSolTransaction = async (
       const postAmount = postTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
       const preAmount = preTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
       const mintAddr = postTokenBalances?.[1]?.mint || "";
-      const receiver = postTokenBalances?.[1]?.owner || "";
+      const receiver = postTokenBalances?.[0]?.owner || "";
 
       if (
         receiver.toUpperCase() == toAddress.toUpperCase() &&
