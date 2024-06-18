@@ -11,7 +11,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import axios from "axios";
-import { formatUnit } from "./bigmath";
+import { bsub, formatUnit } from "./bigmath";
 
 const connection = new Web3.Connection(Web3.clusterApiUrl("mainnet-beta"), {
   commitment: "confirmed",
@@ -202,6 +202,7 @@ export const checkSolTransaction = async (
       preTokenBalances?.length > 0
     ) {
       console.log("tokenAddr", tokenAddr);
+      // it logs this but the below log doesn't appear
       const decimals = postTokenBalances?.[1]?.uiTokenAmount?.decimals || 9;
       const postAmount = postTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
       const preAmount = preTokenBalances?.[1]?.uiTokenAmount?.amount || 0;
@@ -212,9 +213,11 @@ export const checkSolTransaction = async (
         receiver.toUpperCase() == toAddress.toUpperCase() &&
         mintAddr.toUpperCase() == tokenAddr.toUpperCase()
       ) {
-        const val = Number(postAmount) - Number(preAmount);
+        const val = bsub(postAmount, preAmount);
         const amount = formatUnit(val, decimals);
         console.log("val, amount", val, amount);
+
+        /// here it doesn't log the ablve log
         return {
           blockTime: result?.blockTime,
           amount: Number(amount),
