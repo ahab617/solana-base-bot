@@ -213,7 +213,7 @@ export const checkSolTransaction = async (
         receiver.toUpperCase() == toAddress.toUpperCase() &&
         mintAddr.toUpperCase() == tokenAddr.toUpperCase()
       ) {
-        const val = bsub(postAmount, preAmount);
+        const val = bsub(preAmount, postAmount);
         const amount = formatUnit(val, decimals);
         console.log("val, amount", val, amount);
 
