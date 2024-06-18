@@ -268,6 +268,7 @@ Group: ${ad.link}\n
               text: fText,
               media: { media_ids: mediaIds },
             });
+            fs.unlinkSync(fileName);
             console.log("Tweet Success", response);
           } catch (err) {
             console.log(err);
