@@ -17,25 +17,25 @@ Please change package settings below:</b>`,
       keyboards: [
         [
           {
-            text: "Package 1 (Sponsored Post only)",
+            text: "1 sponsored post",
             callback_data: "package1setting",
           },
         ],
         [
           {
-            text: "Package 2 (10 times of Buybot information)",
+            text: "10 sponsored posts",
             callback_data: "package2setting",
           },
         ],
         [
           {
-            text: "Package 3 (25 times of Buybot information)",
+            text: "25 sponsored posts",
             callback_data: "package3setting",
           },
         ],
         [
           {
-            text: "Package 4 (50 times of Buybot information)",
+            text: "50 sponsored posts",
             callback_data: "package4setting",
           },
         ],
