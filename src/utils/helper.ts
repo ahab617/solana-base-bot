@@ -63,3 +63,9 @@ export const formatAddress = (_address: string) => {
   const sub = _address.substring(_address.length - 4);
   return pre + "..." + sub;
 };
+
+export const isUrl = (url: string) => {
+  const regex =
+    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+  return regex.test(url) as boolean;
+};

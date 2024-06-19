@@ -54,6 +54,7 @@ const AdSchema = new Schema({
   mediaId: String,
   description: String,
   link: String,
+  website: String,
   package: String,
   count: Number,
   hash: String,
@@ -86,6 +87,12 @@ const TwitterSchema = new Schema({
   expiredTime: Number,
 });
 
+const RevenueSplitSchema = new Schema({
+  creator: String,
+  peke: Number,
+  sol: Number,
+});
+
 export const Tokens = mongoose.model("tokens", TokenSchema);
 export const Ads = mongoose.model("ads", AdSchema);
 export const SolTransactions = mongoose.model(
@@ -96,3 +103,4 @@ export const Charts = mongoose.model("charts", ChartSchema);
 export const AdSettings = mongoose.model("adsettings", AdSettingSchema);
 export const TokenCosts = mongoose.model("tokencosts", TokenCostSchema);
 export const Twitters = mongoose.model("twitters", TwitterSchema);
+export const RevenueSplits = mongoose.model("revenusplits", RevenueSplitSchema);

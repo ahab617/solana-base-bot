@@ -408,24 +408,7 @@ export const chartHandleEvent = async (props: any) => {
       if (ads.length > 0) {
         const randIdx = Math.floor(Math.random() * ads.length);
         const ad = ads[randIdx] as AdInterface;
-        if (ad.count < 2) {
-          await postMessageForSpike(data, ad);
-          await sendMessage({
-            id: Number(ad.creator),
-            message: "<b>Your advertise was just expired.</b>",
-          });
-          await AdController.deleteOne({
-            filter: { creator: ad.creator, groupId: ad.groupId },
-          });
-        } else {
-          await postMessageForSpike(data, ad);
-          await AdController.update({
-            filter: { creator: ad.creator, groupId: ad.groupId },
-            update: {
-              count: ad.count - 1,
-            },
-          });
-        }
+        await postMessageForSpike(data, ad);
       } else {
         await postMessageForSpike(data);
       }
@@ -439,95 +422,42 @@ export const chartHandleEvent = async (props: any) => {
     limit: number,
     chart: ChartInterface
   ) => {
-    try {
+    if (
+      (type === "buyamount" && limit > chart.buySpike) ||
+      (type === "sellamount" && limit > chart.sellSpike)
+    ) {
       const pair = await getPairInformation(chart.chain, chart.pairAddress);
-      const data = JSON.stringify({
-        query:
-          type === "buyamount"
-            ? GET_BASE_BUY_AMOUNT_SPIKE(chart.pairAddress, limit)
-            : GET_BASE_SELL_AMOUNT_SPIKE(chart.pairAddress, limit),
-      });
-      const params = {
-        method: "post",
-        url: "https://streaming.bitquery.io/eap",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: config.bitAPIKey,
-        },
-        data: data,
-      };
-      await axios(params).then(async (res: any) => {
-        const trades = res?.data?.data?.EVM?.DEXTrades || [];
-        let amount = 0;
-        for (let i = 0; i < trades.length; i++) {
-          if (type === "buyamount") {
-            amount += Number(trades[i]?.Trade?.Buy?.Amount);
-          } else {
-            amount += Number(trades[i]?.Trade?.Sell?.Amount);
-          }
-        }
-        console.log(
-          `${type === "buyamount" ? "Bought" : "Sold"} `,
-          amount,
-          "tokens on base chain"
+      try {
+        const metadata = await getBaseTokenMetadata(
+          pair?.pair?.baseToken?.address
         );
-        if (
-          (type === "buyamount" && amount > chart.buySpike) ||
-          (type === "sellamount" && amount > chart.sellSpike)
-        ) {
-          try {
-            const metadata = await getBaseTokenMetadata(
-              pair?.pair?.baseToken?.address
-            );
-            const totalSupply = metadata?.totalSupply || 0;
-            const decimals = metadata?.decimals || 1;
-            const mcap =
-              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
-              10 ** decimals;
-            const data: SpikeInterface = {
-              groupId: chart.groupId,
-              chain: chart.chain,
-              spikeType: type,
-              symbol: pair?.pair?.baseToken.symbol,
-              time: type === "buyamount" ? chart.buyTime : chart.sellTime,
-              spike: amount,
-              url: pair?.pair?.url,
-              marketcap: mcap,
-            };
-            const ads = await AdController.find({
-              filter: { groupId: chartInfo.groupId },
-            });
-            if (ads.length > 0) {
-              const randIdx = Math.floor(Math.random() * ads.length);
-              const ad = ads[randIdx] as AdInterface;
-              if (ad.count < 2) {
-                await postMessageForSpike(data, ad);
-                await sendMessage({
-                  id: Number(ad.creator),
-                  message: "<b>Your advertise was just expired.</b>",
-                });
-                await AdController.deleteOne({
-                  filter: { creator: ad.creator, groupId: ad.groupId },
-                });
-              } else {
-                await postMessageForSpike(data, ad);
-                await AdController.update({
-                  filter: { creator: ad.creator, groupId: ad.groupId },
-                  update: {
-                    count: ad.count - 1,
-                  },
-                });
-              }
-            } else {
-              await postMessageForSpike(data);
-            }
-          } catch (err) {
-            console.log(err);
-          }
+        const totalSupply = metadata?.totalSupply || 0;
+        const decimals = metadata?.decimals || 1;
+        const mcap =
+          (Number(pair?.pair?.priceUsd) * Number(totalSupply)) / 10 ** decimals;
+        const data: SpikeInterface = {
+          groupId: chart.groupId,
+          chain: chart.chain,
+          spikeType: type,
+          symbol: pair?.pair?.baseToken.symbol,
+          time: type === "buyamount" ? chart.buyTime : chart.sellTime,
+          spike: limit,
+          url: pair?.pair?.url,
+          marketcap: mcap,
+        };
+        const ads = await AdController.find({
+          filter: { groupId: chartInfo.groupId },
+        });
+        if (ads.length > 0) {
+          const randIdx = Math.floor(Math.random() * ads.length);
+          const ad = ads[randIdx] as AdInterface;
+          await postMessageForSpike(data, ad);
+        } else {
+          await postMessageForSpike(data);
         }
-      });
-    } catch (err) {
-      console.log("Base chain spike error");
+      } catch (err) {
+        console.log(err);
+      }
     }
   };
 
@@ -536,95 +466,42 @@ export const chartHandleEvent = async (props: any) => {
     limit: number,
     chart: ChartInterface
   ) => {
-    try {
-      const pair = await getPairInformation(chart.chain, chart.pairAddress);
-      const data = JSON.stringify({
-        query:
-          type === "buyamount"
-            ? GET_SOLANA_BUY_AMOUNT_SPIKE(chart.pairAddress, limit)
-            : GET_SOLANA_SELL_AMOUNT_SPIKE(chart.pairAddress, limit),
-      });
-      const params = {
-        method: "post",
-        url: "https://streaming.bitquery.io/eap",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: config.bitAPIKey,
-        },
-        data: data,
-      };
-      await axios(params).then(async (res: any) => {
-        const trades = res?.data?.data?.Solana?.DEXTrades || [];
-        let amount = 0;
-        for (let i = 0; i < trades.length; i++) {
-          if (type === "buyamount") {
-            amount += Number(trades[i]?.Trade?.Buy?.Amount);
-          } else {
-            amount += Number(trades[i]?.Trade?.Sell?.Amount);
-          }
-        }
-        console.log(
-          `${type === "buyamount" ? "Bought" : "Sold"} `,
-          amount,
-          "tokens on solana"
+    if (
+      (type === "buyamount" && limit > chart.buySpike) ||
+      (type === "sellamount" && limit > chart.sellSpike)
+    ) {
+      try {
+        const pair = await getPairInformation(chart.chain, chart.pairAddress);
+        const metadata = await getSolanaTokenMetadata(
+          pair?.pair?.baseToken?.address
         );
-        if (
-          (type === "buyamount" && amount > chart.buySpike) ||
-          (type === "sellamount" && amount > chart.sellSpike)
-        ) {
-          try {
-            const metadata = await getSolanaTokenMetadata(
-              pair?.pair?.baseToken?.address
-            );
-            const totalSupply = metadata?.totalSupply || 0;
-            const decimals = metadata?.decimals || 1;
-            const mcap =
-              (Number(pair?.pair?.priceUsd) * Number(totalSupply)) /
-              10 ** decimals;
-            const data: SpikeInterface = {
-              groupId: chart.groupId,
-              chain: chart.chain,
-              spikeType: type,
-              symbol: pair?.pair?.baseToken.symbol,
-              time: type === "buyamount" ? chart.buyTime : chart.sellTime,
-              spike: amount,
-              url: pair?.pair?.url,
-              marketcap: mcap,
-            };
-            const ads = await AdController.find({
-              filter: { groupId: chartInfo.groupId },
-            });
-            if (ads.length > 0) {
-              const randIdx = Math.floor(Math.random() * ads.length);
-              const ad = ads[randIdx] as AdInterface;
-              if (ad.count < 2) {
-                await postMessageForSpike(data, ad);
-                await sendMessage({
-                  id: Number(ad.creator),
-                  message: "<b>Your advertise was just expired.</b>",
-                });
-                await AdController.deleteOne({
-                  filter: { creator: ad.creator, groupId: ad.groupId },
-                });
-              } else {
-                await postMessageForSpike(data, ad);
-                await AdController.update({
-                  filter: { creator: ad.creator, groupId: ad.groupId },
-                  update: {
-                    count: ad.count - 1,
-                  },
-                });
-              }
-            } else {
-              await postMessageForSpike(data);
-            }
-          } catch (err) {
-            console.log(err);
-          }
+        const totalSupply = metadata?.totalSupply || 0;
+        const decimals = metadata?.decimals || 1;
+        const mcap =
+          (Number(pair?.pair?.priceUsd) * Number(totalSupply)) / 10 ** decimals;
+        const data: SpikeInterface = {
+          groupId: chart.groupId,
+          chain: chart.chain,
+          spikeType: type,
+          symbol: pair?.pair?.baseToken.symbol,
+          time: type === "buyamount" ? chart.buyTime : chart.sellTime,
+          spike: limit,
+          url: pair?.pair?.url,
+          marketcap: mcap,
+        };
+        const ads = await AdController.find({
+          filter: { groupId: chartInfo.groupId },
+        });
+        if (ads.length > 0) {
+          const randIdx = Math.floor(Math.random() * ads.length);
+          const ad = ads[randIdx] as AdInterface;
+          await postMessageForSpike(data, ad);
+        } else {
+          await postMessageForSpike(data);
         }
-      });
-    } catch (err) {
-      console.log("Base chain spike error");
+      } catch (err) {
+        console.log(err);
+      }
     }
   };
 
@@ -711,76 +588,76 @@ const GET_TRADE_DATA = (pairAddress: string, quoteTokenAddress: string) => {
     `;
 };
 
-const GET_BASE_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
-  return `query MyQuery {
-    EVM(network: base) {
-      DEXTrades(
-        limit: {count: ${count}}
-        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
-        orderBy: {descending: Block_Time}
-      ) {
-        Trade {
-          Buy {
-            Amount
-          }
-        }
-      }
-    }
-  }`;
-};
+// const GET_BASE_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+//   return `query MyQuery {
+//     EVM(network: base) {
+//       DEXTrades(
+//         limit: {count: ${count}}
+//         where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
+//         orderBy: {descending: Block_Time}
+//       ) {
+//         Trade {
+//           Buy {
+//             Amount
+//           }
+//         }
+//       }
+//     }
+//   }`;
+// };
 
-const GET_BASE_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
-  return `query MyQuery {
-    EVM(network: base) {
-      DEXTrades(
-        limit: {count: ${count}}
-        where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
-        orderBy: {descending: Block_Time}
-      ) {
-        Trade {
-          Sell {
-            Amount
-          }
-        }
-      }
-    }
-  }`;
-};
+// const GET_BASE_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+//   return `query MyQuery {
+//     EVM(network: base) {
+//       DEXTrades(
+//         limit: {count: ${count}}
+//         where: {Trade: {Success: true, Dex: {Pair: {SmartContract: {is: "${pairAddress}"}}}}, ChainId: {}}
+//         orderBy: {descending: Block_Time}
+//       ) {
+//         Trade {
+//           Sell {
+//             Amount
+//           }
+//         }
+//       }
+//     }
+//   }`;
+// };
 
-const GET_SOLANA_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
-  return `query MyQuery {
-  Solana {
-    DEXTrades(
-      where: {Trade: {Buy: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
-      limit: {count: ${count}}
-      orderBy: {descending: Block_Time}
-    ) {
-      Trade {
-        Buy {
-          Amount
-        }
-      }
-    }
-  }
-}
-`;
-};
+// const GET_SOLANA_BUY_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+//   return `query MyQuery {
+//   Solana {
+//     DEXTrades(
+//       where: {Trade: {Buy: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
+//       limit: {count: ${count}}
+//       orderBy: {descending: Block_Time}
+//     ) {
+//       Trade {
+//         Buy {
+//           Amount
+//         }
+//       }
+//     }
+//   }
+// }
+// `;
+// };
 
-const GET_SOLANA_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
-  return `query MyQuery {
-  Solana {
-    DEXTrades(
-      where: {Trade: {Sell: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
-      limit: {count: ${count}}
-      orderBy: {descending: Block_Time}
-    ) {
-      Trade {
-        Sell {
-          Amount
-        }
-      }
-    }
-  }
-}
-`;
-};
+// const GET_SOLANA_SELL_AMOUNT_SPIKE = (pairAddress: string, count: number) => {
+//   return `query MyQuery {
+//   Solana {
+//     DEXTrades(
+//       where: {Trade: {Sell: {}, Market: {MarketAddress: {is: "${pairAddress}"}}}}
+//       limit: {count: ${count}}
+//       orderBy: {descending: Block_Time}
+//     ) {
+//       Trade {
+//         Sell {
+//           Amount
+//         }
+//       }
+//     }
+//   }
+// }
+// `;
+// };

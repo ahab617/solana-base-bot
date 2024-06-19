@@ -67,6 +67,7 @@ declare interface AdInterface {
   mediaId: string;
   description: string;
   link: string;
+  website: string;
   package: string;
   count: number;
   hash: string;
@@ -99,6 +100,12 @@ declare interface SpikeInterface {
 }
 
 declare interface TokenCostInterface {
+  creator: string;
+  peke: number;
+  sol: number;
+}
+
+declare interface RevenueSplitInterface {
   creator: string;
   peke: number;
   sol: number;

@@ -6,7 +6,7 @@ import {
   getPairInformation,
   getSolanaTokenMetadata,
 } from "blockchain/monitor/library/scan-api";
-import { TwitterController } from "controller";
+import { AdController, TwitterController } from "controller";
 import { TwitterApi } from "twitter-api-v2";
 import request from "request";
 import fs from "fs";
@@ -202,22 +202,19 @@ export const postMessageForSpike = async (
           const marketcap =
             (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
             10 ** Number(metadata?.decimals);
-          let content;
-          if (ad.package === "package1") {
-            content = "";
-          } else {
-            content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
+
+          const content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
 ↪️ <b>Price $${pair?.pair?.priceUsd}</b>
 ⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
 💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
 
+<b>Website: </b>${ad.website}
 <b>Group: </b>${ad.link}
 📊 <a href="${pair?.pair?.url}">Chart</a> ${
-              ad.chain === "base"
-                ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
-                : `🪙 <a href='https://jup.ag/'>Buy</a>`
-            }`;
-          }
+            ad.chain === "base"
+              ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
+              : `🪙 <a href='https://jup.ag/'>Buy</a>`
+          }`;
           if (ad.mediaType === "image") {
             await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
               caption: `<b>Sponsored Post</b>
@@ -237,6 +234,22 @@ ${content}`,
               parse_mode: "HTML",
             });
           }
+          if (ad.count < 2) {
+            await sendMessage({
+              id: Number(ad.creator),
+              message: "<b>Your advertise was just expired.</b>",
+            });
+            await AdController.deleteOne({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+            });
+          } else {
+            await AdController.update({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+              update: {
+                count: ad.count - 1,
+              },
+            });
+          }
           const mediaId = ad.mediaId;
           const file = await bot.getFile(mediaId);
           const filePath = `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`;
@@ -246,23 +259,18 @@ ${content}`,
             await downloadFile(filePath, fileName);
             const media = await client.v1.uploadMedia(fileName);
             const mediaIds = media ? [media] : [];
-            let adText;
-            if (ad.package === "package1") {
-              adText = ad.description;
-            } else {
-              adText = `${ad.description}\n\n💲 $${
-                pair?.pair?.baseToken?.symbol
-              }\n↪️ Price $${pair?.pair?.priceUsd}\n⬆️ Volume 24H: $${
-                pair?.pair?.volume?.h24
-              }\n💰 Market Cap $${numberWithCommas(Number(marketcap), 3)}\n\n
+            const adText = `${ad.description}\n\n💲 $${
+              pair?.pair?.baseToken?.symbol
+            }\n↪️ Price $${pair?.pair?.priceUsd}\n⬆️ Volume 24H: $${
+              pair?.pair?.volume?.h24
+            }\n💰 Market Cap $${numberWithCommas(Number(marketcap), 3)}\n\n
 
 Group: ${ad.link}\n
 📊 Chart: ${pair?.pair?.url}\n${
-                ad.chain === "base"
-                  ? `🦄 Buy: https://app.uniswap.org`
-                  : `🪙 Buy: https://jup.ag`
-              }`;
-            }
+              ad.chain === "base"
+                ? `🦄 Buy: https://app.uniswap.org`
+                : `🪙 Buy: https://jup.ag`
+            }`;
             const fText = `${tweetText}\n\n${adText}`;
             const response = await client.v2.tweet({
               text: fText,
@@ -303,22 +311,17 @@ Group: ${ad.link}\n
           const marketcap =
             (Number(pair?.pair?.priceUsd) * Number(metadata?.totalSupply)) /
             10 ** Number(metadata?.decimals);
-          let content;
-          if (ad.package === "package1") {
-            content = "";
-          } else {
-            content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
+          const content = `💲 <b>$${pair?.pair?.baseToken?.symbol}</b>
 ↪️ <b>Price $${pair?.pair?.priceUsd}</b>
 ⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
 💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
 
 <b>Group: </b>${ad.link}
 📊 <a href="${pair?.pair?.url}">Chart</a> ${
-              ad.chain === "base"
-                ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
-                : `🪙 <a href='https://jup.ag/'>Buy</a>`
-            }`;
-          }
+            ad.chain === "base"
+              ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
+              : `🪙 <a href='https://jup.ag/'>Buy</a>`
+          }`;
           if (ad.mediaType === "image") {
             await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
               caption: `<b>Sponsored Post</b>
@@ -337,6 +340,22 @@ ${ad.description}
 ${content}`,
               parse_mode: "HTML",
             });
+            if (ad.count < 2) {
+              await sendMessage({
+                id: Number(ad.creator),
+                message: "<b>Your advertise was just expired.</b>",
+              });
+              await AdController.deleteOne({
+                filter: { creator: ad.creator, groupId: ad.groupId },
+              });
+            } else {
+              await AdController.update({
+                filter: { creator: ad.creator, groupId: ad.groupId },
+                update: {
+                  count: ad.count - 1,
+                },
+              });
+            }
           }
         } catch (err) {
           console.log(err);

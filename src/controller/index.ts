@@ -5,6 +5,7 @@ import ChartController from "./chartcontroller";
 import SolController from "./solcontroller";
 import TokenCostController from "./tokencostcontroller";
 import TwitterController from "./twittercontroller";
+import RevenueSplitController from "./revenuesplitcontroller";
 
 export {
   TokenController,
@@ -14,4 +15,5 @@ export {
   SolController,
   TokenCostController,
   TwitterController,
+  RevenueSplitController,
 };

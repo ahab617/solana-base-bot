@@ -12,9 +12,13 @@ import {
   sendSol,
   transferSplToken,
 } from "utils/blockchain";
-import { getRoundSolAmount, getTimeDiff } from "utils/helper";
+import { getRoundSolAmount, getTimeDiff, isUrl } from "utils/helper";
 import { startBuyHandler } from "blockchain/monitor/library";
-import { AdController, AdSettingController } from "controller";
+import {
+  AdController,
+  AdSettingController,
+  RevenueSplitController,
+} from "controller";
 
 export let advertiseInfo = {} as any;
 
@@ -156,15 +160,38 @@ export const setMedia = async (msg: any) => {
       }
       await sendMessage({
         id: chatId,
-        message: "<b>Please provide telegram group link:</b>",
+        message: "<b>Please provide website url:</b>",
       });
-      await addTelegramGroup(msg);
+      await addWebsite(msg);
     } else {
       await sendMessage({
         id: chatId,
         message: "<b>Invalid image or video. Please provide media again.</b>",
       });
       await setMedia(msg);
+    }
+  };
+};
+
+export const addWebsite = async (msg: any) => {
+  const chatId = msg.chat.id;
+  answerCallbacks[chatId] = async function (answer: any) {
+    let website = answer.text;
+    if (isUrl(website)) {
+      advertiseInfo[chatId] = {
+        ...advertiseInfo[chatId],
+        website: website,
+      };
+      await sendMessage({
+        id: chatId,
+        message: "<b>Please provide telegram group link:</b>",
+      });
+      await addTelegramGroup(msg);
+    } else {
+      await sendMessage({
+        id: chatId,
+        message: "<b>Invalid url. Please input the correct url.</b>",
+      });
     }
   };
 };
@@ -217,6 +244,7 @@ export const addTelegramGroup = async (msg: any) => {
 ⬆️ <b>Volume 24H: $${pair?.pair?.volume?.h24}</b>
 💰 <b>Market Cap $${numberWithCommas(Number(marketcap), 3)}</b>
 
+<b>Website: </b>${advertiseInfo[chatId]?.website}
 <b>Group: </b>${advertiseInfo[chatId]?.link}
 📊 <a href="${pair?.pair?.url}">Chart</a> ${
             advertiseInfo[chatId]?.chain === "base"
@@ -406,6 +434,7 @@ And then please input transaction hash in 5 mins.</b>`,
                 count: advertiseInfo[chatId]?.count,
                 package: advertiseInfo[chatId]?.package,
                 hash: hash,
+                website: advertiseInfo[chatId]?.website,
                 link: advertiseInfo[chatId]?.link,
                 pairAddress: advertiseInfo[chatId]?.pairAddress,
                 mediaId: advertiseInfo[chatId]?.mediaId,
@@ -423,13 +452,35 @@ And then please input transaction hash in 5 mins.</b>`,
               });
 
               if (admin) {
-                const transferAmount = Number(result.amount * 0.7);
+                let peke = 0;
+                let sol = 0;
+                const revenusplits = await RevenueSplitController.findOne({
+                  filter: { creator: { $ne: "" } },
+                });
+                if (revenusplits) {
+                  peke = revenusplits.peke;
+                  sol = revenusplits.sol;
+                }
+                let transferAmount = 0;
+                if (type === "PEKE") {
+                  if (peke > 0) {
+                    transferAmount = (Number(result.amount) * peke) / 100;
+                  } else {
+                    transferAmount = Number(result.amount) * 0.7;
+                  }
+                } else {
+                  if (sol > 0) {
+                    transferAmount = (Number(result.amount) * sol) / 100;
+                  } else {
+                    transferAmount = Number(result.amount) * 0.6;
+                  }
+                }
                 if (type === "PEKE") {
                   const tx = await transferSplToken(
                     config.ownerPrivateKey,
                     config.pekeAddress,
                     admin.address,
-                    transferAmount
+                    Number(transferAmount)
                   );
                   if (tx) {
                     await sendMessage({
@@ -440,7 +491,7 @@ Please click <a href="https://solscan.io/tx/${tx}">here</a> to check transaction
                   }
                 } else {
                   const tx = await sendSol(
-                    transferAmount,
+                    Number(transferAmount),
                     admin.address,
                     config.ownerPrivateKey
                   );

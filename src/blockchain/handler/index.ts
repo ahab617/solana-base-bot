@@ -36,7 +36,9 @@ const swapHandler = async (tx: any, token: TokenInterface) => {
       token.baseTokenAddress,
       token.pairAddress
     );
-    const marketcap = Number(token.totalSupply) * Number(tokenPrice);
+    const marketcap =
+      (Number(token.totalSupply) * Number(tokenPrice)) /
+      10 ** token.baseTokenDecimals;
 
     const usd =
       Number(tokenPrice) *
