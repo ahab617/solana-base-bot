@@ -16,6 +16,7 @@ import {
   editSaveChart,
   editSelectTime,
   editShowTime,
+  inputAppKey,
   inputSpikeChange,
   inputTwitterHash,
   saveChart,
@@ -259,6 +260,8 @@ export const callBackHandler = async (msg: any, _action: string) => {
     case "twittersubscription":
       await showSubscription(msg);
       break;
+    case "updatepremium":
+      await inputAppKey(msg, true);
     default:
       break;
   }

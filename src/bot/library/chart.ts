@@ -748,7 +748,7 @@ export const showSubscription = async (msg: any) => {
   try {
     if (groupId) {
       const tokenCost = await TokenCostController.findOne({
-        filter: { creator: { $ne: "" } },
+        filter: { creator: config.ownerId.toString() },
       });
       if (tokenCost && tokenCost?.peke && tokenCost?.sol) {
         twitterInfo[chatId] = {
@@ -776,7 +776,7 @@ export const showSubscription = async (msg: any) => {
             message:
               "<b>Please input App Key from your Twitter Developer Portal.</b>",
           });
-          await inputAppKey(msg);
+          await inputAppKey(msg, false);
         }
       } else {
         await sendMessage({
@@ -795,7 +795,7 @@ export const showSubscription = async (msg: any) => {
   }
 };
 
-const inputAppKey = async (msg: any) => {
+export const inputAppKey = async (msg: any, update: boolean) => {
   const chatId = msg.chat.id;
   const groupId = twitterInfo[chatId]?.groupId;
   try {
@@ -811,7 +811,7 @@ const inputAppKey = async (msg: any) => {
           message:
             "<b>Please input App Secret from your Twitter Developer Portal.</b>",
         });
-        await inputAppSecret(msg);
+        await inputAppSecret(msg, update);
       };
     } else {
       await sendMessage({
@@ -824,7 +824,7 @@ const inputAppKey = async (msg: any) => {
   }
 };
 
-const inputAppSecret = async (msg: any) => {
+const inputAppSecret = async (msg: any, update: boolean) => {
   const chatId = msg.chat.id;
   const groupId = twitterInfo[chatId]?.groupId;
   try {
@@ -840,7 +840,7 @@ const inputAppSecret = async (msg: any) => {
           message:
             "<b>Please input Access Token from your Twitter Developer Portal. Please notice that you have to provided Read/Write available token.</b>",
         });
-        await inputAccessToken(msg);
+        await inputAccessToken(msg, update);
       };
     } else {
       await sendMessage({
@@ -853,7 +853,7 @@ const inputAppSecret = async (msg: any) => {
   }
 };
 
-const inputAccessToken = async (msg: any) => {
+const inputAccessToken = async (msg: any, update: boolean) => {
   const chatId = msg.chat.id;
   const groupId = twitterInfo[chatId]?.groupId;
   try {
@@ -869,7 +869,7 @@ const inputAccessToken = async (msg: any) => {
           message:
             "<b>Please input Access Token Secret from your Twitter Developer Portal. Please notice that you have to provided Read/Write available token.</b>",
         });
-        await inputAccessTokenSecret(msg);
+        await inputAccessTokenSecret(msg, update);
       };
     } else {
       await sendMessage({
@@ -882,7 +882,7 @@ const inputAccessToken = async (msg: any) => {
   }
 };
 
-const inputAccessTokenSecret = async (msg: any) => {
+const inputAccessTokenSecret = async (msg: any, update: boolean) => {
   const chatId = msg.chat.id;
   const groupId = twitterInfo[chatId]?.groupId;
   try {
@@ -894,20 +894,38 @@ const inputAccessTokenSecret = async (msg: any) => {
           accessSecret: accessSecret,
         };
         const tokenCost = await TokenCostController.findOne({
-          filter: { creator: { $ne: "" } },
+          filter: { creator: config.ownerId.toString() },
         });
 
         const peke = tokenCost.peke;
         const sol = tokenCost.sol;
+
+        const keyboards = update
+          ? [
+              [
+                {
+                  text: `${peke} PEKE`,
+                  callback_data: `updateTwitterPEKE:${peke}`,
+                },
+                {
+                  text: `${sol} SOL`,
+                  callback_data: `updateTwitterSOL:${sol}`,
+                },
+              ],
+            ]
+          : [
+              [
+                {
+                  text: `${peke} PEKE`,
+                  callback_data: `payTwitterPEKE:${peke}`,
+                },
+                { text: `${sol} SOL`, callback_data: `payTwitterSOL:${sol}` },
+              ],
+            ];
         await sendMessage({
           id: chatId,
           message: "<b>Please choose token what you will pay.</b>",
-          keyboards: [
-            [
-              { text: `${peke} PEKE`, callback_data: `payTwitterPEKE:${peke}` },
-              { text: `${sol} SOL`, callback_data: `payTwitterSOL:${sol}` },
-            ],
-          ],
+          keyboards: keyboards,
         });
       };
     } else {
@@ -970,9 +988,6 @@ And then please input transaction hash in 5 mins.</b>`,
 
           if (result) {
             const camount = getRoundSolAmount(result.amount);
-            console.log("result.amount", result.amount);
-            console.log("🚀 ~ camount:", camount);
-            console.log("🚀 ~ amount:", amount);
             if (Number(camount) < Number(amount)) {
               await sendMessage({
                 id: chatId,
@@ -986,26 +1001,23 @@ And then please input transaction hash in 5 mins.</b>`,
               });
               await inputTwitterHash(msg, type, amount, update);
             } else {
+              const data: TwitterInterface = {
+                creator: chatId.toString(),
+                groupId: groupId.toString(),
+                appKey: twitterInfo[chatId]?.appKey,
+                appSecret: twitterInfo[chatId]?.appSecret,
+                accessToken: twitterInfo[chatId]?.accessToken,
+                accessSecret: twitterInfo[chatId]?.accessSecret,
+                hash: hash,
+                expiredTime: currentTime() + 24 * 60 * 60 * 30,
+              };
               if (update) {
                 await TwitterController.update({
                   filter: { groupId: groupId.toString() },
-                  update: { expiredTime: currentTime() + 24 * 60 * 60 * 30 },
+                  update: data,
                 });
-                await subscriptionHandler();
               } else {
-                const data: TwitterInterface = {
-                  creator: chatId.toString(),
-                  groupId: groupId.toString(),
-                  appKey: twitterInfo[chatId]?.appKey,
-                  appSecret: twitterInfo[chatId]?.appSecret,
-                  accessToken: twitterInfo[chatId]?.accessToken,
-                  accessSecret: twitterInfo[chatId]?.accessSecret,
-                  hash: hash,
-                  expiredTime: currentTime() + 24 * 60 * 60 * 30,
-                };
-
                 await TwitterController.create(data);
-                await subscriptionHandler();
               }
 
               await sendMessage({
@@ -1015,7 +1027,7 @@ And then please input transaction hash in 5 mins.</b>`,
               });
 
               delete twitterInfo[chatId];
-              await startBuyHandler();
+              await subscriptionHandler();
             }
           } else {
             await sendMessage({
@@ -1035,29 +1047,5 @@ And then please input transaction hash in 5 mins.</b>`,
       id: chatId,
       message: "<b>You can purchase advertise from only groups.</b>",
     });
-  }
-};
-
-export const showToken = async (msg: any) => {
-  const chatId = msg.chat.id;
-  try {
-    const tokenCost = await TokenCostController.findOne({
-      filter: { creator: { $ne: "" } },
-    });
-
-    const peke = tokenCost.peke;
-    const sol = tokenCost.sol;
-    await sendMessage({
-      id: chatId,
-      message: "<b>Please choose token what you will pay.</b>",
-      keyboards: [
-        [
-          { text: `${peke} PEKE`, callback_data: `updateTwitterPEKE:${peke}` },
-          { text: `${sol} SOL`, callback_data: `updateTwitterSOL:${sol}` },
-        ],
-      ],
-    });
-  } catch (err) {
-    console.log("Error: ", err);
   }
 };
