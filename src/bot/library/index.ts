@@ -235,6 +235,26 @@ ${content}`,
             });
           }
 
+          console.log("🚀 ~ ad.count:", ad.count);
+          if (ad.count < 2) {
+            console.log("🚀 ~ ad.count < 2:", ad.count);
+            await sendMessage({
+              id: Number(ad.creator),
+              message: "<b>Your advertise was just expired.</b>",
+            });
+            await AdController.deleteOne({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+            });
+          } else {
+            console.log("🚀 ~ ad.count > 2:", ad.count);
+            await AdController.update({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+              update: {
+                count: ad.count - 1,
+              },
+            });
+          }
+
           const mediaId = ad.mediaId;
           const file = await bot.getFile(mediaId);
           const filePath = `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`;
@@ -266,31 +286,11 @@ Group: ${ad.link}\n
           } catch (err) {
             console.log(err);
           }
-          console.log("🚀 ~ ad.count:", ad.count);
-          if (ad.count < 2) {
-            console.log("🚀 ~ ad.count < 2:", ad.count);
-            await sendMessage({
-              id: Number(ad.creator),
-              message: "<b>Your advertise was just expired.</b>",
-            });
-            await AdController.deleteOne({
-              filter: { creator: ad.creator, groupId: ad.groupId },
-            });
-          } else {
-            console.log("🚀 ~ ad.count > 2:", ad.count);
-            await AdController.update({
-              filter: { creator: ad.creator, groupId: ad.groupId },
-              update: {
-                count: ad.count - 1,
-              },
-            });
-          }
         } catch (err) {
           console.log(err);
           console.log("postMessageForPriceSpike sending error");
           return false;
         }
-        console.log("🚀 ~ ad.count:", ad.count);
       } else {
         try {
           const response = await client.v2.tweet({ text: tweetText });
