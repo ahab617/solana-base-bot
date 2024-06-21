@@ -345,6 +345,7 @@ ${ad.description}
 ${content}`,
               parse_mode: "HTML",
             });
+            console.log("Ad here ******************", ad);
             if (ad.count < 2) {
               console.log("🚀 ~ ad.count < 2:", ad.count);
               await sendMessage({
