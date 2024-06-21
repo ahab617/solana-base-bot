@@ -234,7 +234,7 @@ ${content}`,
               parse_mode: "HTML",
             });
           }
-          if (ad.count < 2) {
+          if (ad.count < 3) {
             await sendMessage({
               id: Number(ad.creator),
               message: "<b>Your advertise was just expired.</b>",
@@ -340,7 +340,7 @@ ${ad.description}
 ${content}`,
               parse_mode: "HTML",
             });
-            if (ad.count < 2) {
+            if (ad.count < 3) {
               await sendMessage({
                 id: Number(ad.creator),
                 message: "<b>Your advertise was just expired.</b>",

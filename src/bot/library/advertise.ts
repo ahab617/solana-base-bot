@@ -258,22 +258,22 @@ export const addTelegramGroup = async (msg: any) => {
         id: chatId,
         message: "<b>Please select your plan:</b>",
         keyboards: [
-          [{ text: "Sponsored Post Only", callback_data: "package1" }],
+          [{ text: "1 sponsored post", callback_data: "package1" }],
           [
             {
-              text: "Standard (Post + 10 times Buy Information)",
+              text: "10 sponsored posts",
               callback_data: "package2",
             },
           ],
           [
             {
-              text: "Advanced (Post + 25 times Buy Information)",
+              text: "25 sponsored posts",
               callback_data: "package3",
             },
           ],
           [
             {
-              text: "Pro (Post + 50 times Buy Information)",
+              text: "50 sponsored posts",
               callback_data: "package4",
             },
           ],
