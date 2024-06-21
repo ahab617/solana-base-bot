@@ -455,7 +455,7 @@ And then please input transaction hash in 5 mins.</b>`,
                 let peke = 0;
                 let sol = 0;
                 const revenusplits = await RevenueSplitController.findOne({
-                  filter: { creator: { $ne: config.ownerId.toString() } },
+                  filter: { creator: config.ownerId.toString() },
                 });
                 if (revenusplits) {
                   peke = revenusplits.peke;
