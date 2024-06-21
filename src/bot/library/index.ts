@@ -234,22 +234,7 @@ ${content}`,
               parse_mode: "HTML",
             });
           }
-          if (ad.count < 3) {
-            await sendMessage({
-              id: Number(ad.creator),
-              message: "<b>Your advertise was just expired.</b>",
-            });
-            await AdController.deleteOne({
-              filter: { creator: ad.creator, groupId: ad.groupId },
-            });
-          } else {
-            await AdController.update({
-              filter: { creator: ad.creator, groupId: ad.groupId },
-              update: {
-                count: ad.count - 1,
-              },
-            });
-          }
+
           const mediaId = ad.mediaId;
           const file = await bot.getFile(mediaId);
           const filePath = `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`;
@@ -280,6 +265,22 @@ Group: ${ad.link}\n
             console.log("Tweet Success", response);
           } catch (err) {
             console.log(err);
+          }
+          if (ad.count < 2) {
+            await sendMessage({
+              id: Number(ad.creator),
+              message: "<b>Your advertise was just expired.</b>",
+            });
+            await AdController.deleteOne({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+            });
+          } else {
+            await AdController.update({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+              update: {
+                count: ad.count - 1,
+              },
+            });
           }
         } catch (err) {
           console.log(err);
@@ -340,7 +341,7 @@ ${ad.description}
 ${content}`,
               parse_mode: "HTML",
             });
-            if (ad.count < 3) {
+            if (ad.count < 2) {
               await sendMessage({
                 id: Number(ad.creator),
                 message: "<b>Your advertise was just expired.</b>",
