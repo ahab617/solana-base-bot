@@ -757,7 +757,7 @@ export const showSubscription = async (msg: any) => {
           groupId: groupId,
         };
         const T = await TwitterController.findOne({
-          filter: { groupId: groupId.toString },
+          filter: { groupId: groupId.toString() },
         });
 
         if (T) {
