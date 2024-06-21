@@ -346,6 +346,7 @@ ${content}`,
               parse_mode: "HTML",
             });
             if (ad.count < 2) {
+              console.log("🚀 ~ ad.count < 2:", ad.count);
               await sendMessage({
                 id: Number(ad.creator),
                 message: "<b>Your advertise was just expired.</b>",
@@ -354,6 +355,7 @@ ${content}`,
                 filter: { creator: ad.creator, groupId: ad.groupId },
               });
             } else {
+              console.log("🚀 ~ ad.count < 2:", ad.count);
               await AdController.update({
                 filter: { creator: ad.creator, groupId: ad.groupId },
                 update: {
