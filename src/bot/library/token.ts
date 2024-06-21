@@ -654,6 +654,7 @@ export const deleteToken = async (msg: any) => {
   });
   if (!token) {
     await sendMessage({ id: chatId, message: "<b>Could not find token.</b>" });
+    return;
   }
   const pairName = token.pairName;
 
