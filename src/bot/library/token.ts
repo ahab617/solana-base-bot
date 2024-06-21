@@ -21,7 +21,7 @@ export const showList = async (msg: any) => {
   if (groupId) {
     tokenInfo[chatId] = {
       ...tokenInfo[chatId],
-      groupId: groupId,
+      groupId: groupId.toString(),
     };
     const tokens = await TokenController.find({
       filter: { creator: chatId.toString(), groupId: groupId.toString() },
@@ -67,7 +67,7 @@ export const botSetup = async (msg: any) => {
   if (groupId) {
     tokenInfo[chatId] = {
       ...tokenInfo[chatId],
-      groupId: groupId,
+      groupId: groupId.toString(),
     };
     await sendMessage({
       id: chatId,
@@ -330,7 +330,7 @@ const confirmAddToken = async (msg: any) => {
 
     await TokenController.create({
       creator: chatId,
-      groupId: data.groupId,
+      groupId: data.groupId.toString(),
       pairName: data.pairName,
       chainId: data.chainId,
       pairAddress: data.pairAddress,
@@ -438,7 +438,7 @@ export const editMedia = async (msg: any) => {
       await TokenController.update({
         filter: {
           creator: chatId,
-          groupId: groupId,
+          groupId: groupId.toString(),
           pairAddress: token.pairAddress,
         },
         update: { mediaType, mediaId },
@@ -475,7 +475,7 @@ export const editEmoji = async (msg: any) => {
   const token = await TokenController.findOne({
     filter: {
       chatId: msg.from.id,
-      groupId: groupId,
+      groupId: groupId.toString(),
       pairAddress: pairAddress,
     },
   });
@@ -489,7 +489,11 @@ export const editEmoji = async (msg: any) => {
   answerCallbacks[chatId] = async function (answer: any) {
     var emoji = answer.text;
     await TokenController.update({
-      filter: { creator: chatId, groupId: groupId, pairAddress: pairAddress },
+      filter: {
+        creator: chatId,
+        groupId: groupId.toString(),
+        pairAddress: pairAddress,
+      },
       update: { emoji },
     })
       .then(async () => {
@@ -547,7 +551,11 @@ export const editMin = async (msg: any) => {
       return;
     }
     await TokenController.update({
-      filter: { creator: chatId, groupId: groupId, pairAddress: pairAddress },
+      filter: {
+        creator: chatId,
+        groupId: groupId.toString(),
+        pairAddress: pairAddress,
+      },
       update: { min: amount || 0 },
     })
       .then(async () => {
@@ -579,7 +587,7 @@ export const editStep = async (msg: any) => {
   const token = await TokenController.findOne({
     filter: {
       chatId: msg.from.id,
-      groupId: groupId,
+      groupId: groupId.toString(),
       pairAddress: pairAddress,
     },
   });
@@ -604,7 +612,11 @@ export const editStep = async (msg: any) => {
       return;
     }
     await TokenController.update({
-      filter: { creator: chatId, groupId: groupId, pairAddress: pairAddress },
+      filter: {
+        creator: chatId,
+        groupId: groupId.toString(),
+        pairAddress: pairAddress,
+      },
       update: { step: amount || 0 },
     })
       .then(async () => {
@@ -636,7 +648,7 @@ export const deleteToken = async (msg: any) => {
   const token = await TokenController.findOne({
     filter: {
       chatId: msg.from.id,
-      groupId: groupId,
+      groupId: groupId.toString(),
       pairAddress: pairAddress,
     },
   });
@@ -646,7 +658,11 @@ export const deleteToken = async (msg: any) => {
   const pairName = token.pairName;
 
   await TokenController.deleteOne({
-    filter: { creator: chatId, groupId: groupId, pairAddress: pairAddress },
+    filter: {
+      creator: chatId,
+      groupId: groupId.toString(),
+      pairAddress: pairAddress,
+    },
   })
     .then(async () => {
       await BlockNumController.deleteOne({

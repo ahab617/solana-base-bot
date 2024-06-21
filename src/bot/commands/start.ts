@@ -47,12 +47,12 @@ export default new Commands(
       const hasPermission = admins.some((admin) => admin.user.id === chatId);
 
       editInfo[chatId] = {
-        groupId: groupId,
+        groupId: groupId.toString(),
       };
 
       if (setAd) {
         advertiseInfo[chatId] = {
-          groupId: groupId,
+          groupId: groupId.toString(),
         };
         await showAdvertise(msg);
       }
@@ -61,12 +61,12 @@ export default new Commands(
         if (setChart) {
           editChartInfo[chatId] = {
             ...editChartInfo[chatId],
-            groupId: groupId,
+            groupId: groupId.toString(),
           };
 
           chartInfo[chatId] = {
             ...chartInfo[chatId],
-            groupId: groupId,
+            groupId: groupId.toString(),
           };
           await showChartList(msg);
         } else if (setupAdvertisement) {
