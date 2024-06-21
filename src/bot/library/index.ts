@@ -143,8 +143,10 @@ export const postMessageForSpike = async (
     const Twitter = await TwitterController.findOne({
       filter: { groupId: data.groupId.toString() },
     });
+    console.log("🚀 ~ Twitter:", Twitter);
 
     if (Twitter) {
+      console.log("There is twitter subscription");
       const appKey = Twitter.appKey as string;
       const appSecret = Twitter.appSecret as string;
       const accessToken = Twitter.accessToken as string;
@@ -215,6 +217,7 @@ export const postMessageForSpike = async (
               ? `🦄 <a href='https://app.uniswap.org/'>Buy</a>`
               : `🪙 <a href='https://jup.ag/'>Buy</a>`
           }`;
+          console.log("advertise *************", ad);
           if (ad.mediaType === "image") {
             await bot.sendPhoto(Number(ad.groupId), ad.mediaId, {
               caption: `<b>Sponsored Post</b>
@@ -300,7 +303,9 @@ Group: ${ad.link}\n
         }
       }
     } else {
+      console.log("There is no subscription");
       if (ad) {
+        console.log("Ad ((((((((((", ad);
         try {
           const pair = await getPairInformation(ad.chain, ad.pairAddress);
           let metadata;
@@ -345,25 +350,25 @@ ${ad.description}
 ${content}`,
               parse_mode: "HTML",
             });
-            console.log("Ad here ******************", ad);
-            if (ad.count < 2) {
-              console.log("🚀 ~ ad.count < 2:", ad.count);
-              await sendMessage({
-                id: Number(ad.creator),
-                message: "<b>Your advertise was just expired.</b>",
-              });
-              await AdController.deleteOne({
-                filter: { creator: ad.creator, groupId: ad.groupId },
-              });
-            } else {
-              console.log("🚀 ~ ad.count < 2:", ad.count);
-              await AdController.update({
-                filter: { creator: ad.creator, groupId: ad.groupId },
-                update: {
-                  count: ad.count - 1,
-                },
-              });
-            }
+          }
+          console.log("Ad here ******************", ad);
+          if (ad.count < 2) {
+            console.log("🚀 ~ ad.count < 2:", ad.count);
+            await sendMessage({
+              id: Number(ad.creator),
+              message: "<b>Your advertise was just expired.</b>",
+            });
+            await AdController.deleteOne({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+            });
+          } else {
+            console.log("🚀 ~ ad.count < 2:", ad.count);
+            await AdController.update({
+              filter: { creator: ad.creator, groupId: ad.groupId },
+              update: {
+                count: ad.count - 1,
+              },
+            });
           }
         } catch (err) {
           console.log(err);
