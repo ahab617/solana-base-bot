@@ -31,7 +31,6 @@ const connectDatabase = async (mongoUrl: string) => {
   }
 };
 
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
