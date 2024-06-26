@@ -60,7 +60,7 @@ const buyEventHandler = async () => {
 
 const chartEventHandler = async () => {
   for (let i = 0; i < charts.length; i++) {
-    chartHandleEvent({ chartInfo: charts[i] as ChartInterface, times: 5 });
+    chartHandleEvent({ chartInfo: charts[i] as ChartInterface, times: 10 });
   }
 };
 

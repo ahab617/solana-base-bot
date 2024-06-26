@@ -1,8 +1,8 @@
 {
-  "botToken": "7266017453:AAFVXOwU50TfaOnYVUI_OnH9FeJKCXWyQt8",
-  "botUrl": "https://t.me/temp_use_bot",
+  "botToken": "7153262639:AAE10bImJrnwtWDbZYBq1UAxF7ll-IFoWnk",
+  "botUrl": "https://t.me/sol_base_bot",
   "botname": "sol_base_bot",
-  "mongoURI": "mongodb://127.0.0.1:27017/temp",
+  "mongoURI": "mongodb+srv://TGtrackbot:Telegrambot123!@trackbot.o1fv04v.mongodb.net/TGtrackbot",
   "port": 8080,
   "priceDay": 1,
   "ownerId": 914511864,
